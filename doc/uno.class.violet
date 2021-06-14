@@ -62,7 +62,7 @@ number: int</string>
     </void>
     <void property="name">
      <void property="text">
-      <string>Card</string>
+      <string>cards.Card</string>
      </void>
     </void>
    </object>
@@ -92,7 +92,7 @@ number: int</string>
     <void property="attributes">
      <void property="text">
       <string>name: String
-hand: ArryList&lt;Card&gt;
+hand: ArryList&lt;cards.Card&gt;
 
 </string>
      </void>
