@@ -418,7 +418,7 @@ uno()
     </void>
     <void property="name">
      <void property="text">
-      <string>COLOR</string>
+      <string>cards.COLOR</string>
      </void>
     </void>
    </object>

@@ -1,4 +1,4 @@
 package cards;
 
-public class Skip {
+public class Skip extends Card {
 }

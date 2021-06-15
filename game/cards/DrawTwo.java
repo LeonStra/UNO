@@ -1,4 +1,4 @@
 package cards;
 
-public class DrawTwo {
+public class DrawTwo extends Card {
 }

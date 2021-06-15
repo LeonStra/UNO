@@ -1,4 +1,4 @@
 package cards;
 
-public class Reverse {
+public class Reverse extends Card {
 }

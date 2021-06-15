@@ -1,4 +1,4 @@
 package cards;
 
-public class Wild {
+public class Wild extends Card {
 }
