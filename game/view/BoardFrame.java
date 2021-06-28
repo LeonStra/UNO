@@ -1,14 +1,14 @@
 package view;
 
+import cards.COLOR;
 import cards.Card;
+import cards.TYPE;
 import main.Player;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.util.ArrayList;
+import java.awt.event.*;
 
 public class BoardFrame extends JFrame {
     private final Dimension cardDimension = new Dimension(101,151);
@@ -17,21 +17,10 @@ public class BoardFrame extends JFrame {
     public BoardFrame(Player player){
         super("UNO");
         this.player = player;
-        setLayout(new BorderLayout());
 
-        //this.hand = new PlayerHand();
-        //add(hand, BorderLayout.SOUTH);
-        JPanel panel = new JPanel();
-
-        for (Card card : player.getHand()){
-            panel.add(newButton(card));
-        }
-
-        add(panel, BorderLayout.SOUTH);
-
+        //Fenster Einstellungen
         setSize(1200,800);
         setLocationRelativeTo(null);
-        setVisible(true);
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -40,10 +29,13 @@ public class BoardFrame extends JFrame {
         });
     }
 
-    //Einrichten der Karte
+    //Einrichten einer Handkarte
     public JButton newButton(Card card){
         JButton b = new JButton();
         b.setPreferredSize(cardDimension);
+        b.setBorderPainted(false);
+        b.setFocusPainted(false);
+        b.setContentAreaFilled(false);
         b.setIcon(new ImageIcon(card.getPath()));
         b.addActionListener(new AbstractAction() {
             @Override
@@ -54,8 +46,53 @@ public class BoardFrame extends JFrame {
         return b;
     }
 
-    //Aktualisieren der Ansicht
+    //Aktualisieren/Einrichten der Ansicht
     public void refresh(){
+        revalidate();
+        setLayout(new BorderLayout());
 
+        //Handkarten
+        JPanel southPanel = new JPanel();
+
+        JPanel handPanel = new JPanel();
+        handPanel.setBorder(new EmptyBorder(0,0,0,0));
+        for (Card card : player.getHand()){
+            handPanel.add(newButton(card));
+        }
+        handPanel.setPreferredSize(new Dimension(this.getWidth()-cardDimension.width-35,handPanel.getPreferredSize().height));
+        southPanel.add(handPanel);
+
+        //Nachziehstapel
+        JPanel drawPanel = new JPanel();
+        drawPanel.setBorder(new EmptyBorder(0,0,0,0));
+        JButton b = newButton(new Card(TYPE.UNKNOWN, COLOR.UNKNOWN));
+        b.addActionListener(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                player.drawCard();
+            }
+        });
+        drawPanel.add(b);
+        drawPanel.setPreferredSize(new Dimension(cardDimension.width,drawPanel.getPreferredSize().height));
+        southPanel.add(drawPanel);
+
+        add(southPanel, BorderLayout.SOUTH);
+
+        //
+        JPanel playPanel = new JPanel();
+        playPanel.setLayout(new GridLayout(2,1));
+
+        //Spieler
+        JPanel playerPanel = new JPanel();
+        //...
+        playPanel.add(playerPanel);
+
+        //Ablagestapel342x512
+        JButton playPile = newButton(player.getTop());
+        //playPanel.add();
+
+        add(playPanel, BorderLayout.CENTER);
+
+        setVisible(true);
     }
 }

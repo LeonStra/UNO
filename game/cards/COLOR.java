@@ -1,7 +1,7 @@
 package cards;
 
 public enum COLOR {
-    BLUE("b"),RED("r"),YELLOW("y"),GREEN("g"), MULTICOLORED("");
+    UNKNOWN("back"),BLUE("b"),RED("r"),YELLOW("y"),GREEN("g"), MULTICOLORED("");
 
     private final String shortcut;
 
