@@ -30,7 +30,7 @@ public class BoardFrame extends JFrame {
     }
 
     //Einrichten einer Handkarte
-    public JButton newButton(Card card){
+    private JButton newButton(Card card){
         JButton b = new JButton();
         b.setPreferredSize(cardDimension);
         b.setBorderPainted(false);
@@ -94,5 +94,9 @@ public class BoardFrame extends JFrame {
         add(playPanel, BorderLayout.CENTER);
 
         setVisible(true);
+    }
+
+    public void drawFrame(){
+
     }
 }

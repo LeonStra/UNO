@@ -1,27 +1,18 @@
-//Zum Testen des Programms
+package main;
 
+import Exceptions.NotSuitableException;
 import cards.*;
-import main.*;
 
 import java.util.*;
 
-public class InfUnoTest {
+public class Server {
+    //"Datenmodell"
+    private LinkedList<cards.Card> drawPile = new LinkedList<Card>();
+    private LinkedList<cards.Card> playPile = new LinkedList<Card>();
+    private LinkedList<Player> players= new LinkedList<Player>();
+    private Integer drawCount = 0; //Adapterklasse, damit die Zahl global aktualisiert wird
 
-    /*public static void main(String[] args) {
-        System.out.println("Start");
-
-        //"Datenmodell"
-        LinkedList<Card> drawPile = new LinkedList<Card>();
-        LinkedList<Card> playPile = new LinkedList<Card>();
-        LinkedList<Player> players= new LinkedList<Player>();
-        Integer drawCount = 0; //Adapterklasse, damit die Zahl global aktualisiert wird
-
-        //Spieler
-        Player player1 = new Player(drawPile,playPile,players,drawCount);
-        Player player2 = new Player(drawPile,playPile,players,drawCount);
-
-
-        //Start
+    public void createDeck(){
         //Typen vorbereiten
         List<TYPE> typeList = Arrays.stream(TYPE.values()).toList();
         typeList.removeAll(TYPE.getExcluded());
@@ -45,6 +36,5 @@ public class InfUnoTest {
             drawPile.add(new Card(TYPE.WILDFOUR,COLOR.MULTICOLORED));
         }
         Collections.shuffle(drawPile);
-    }*/
-
+    }
 }

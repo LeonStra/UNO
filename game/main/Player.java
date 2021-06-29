@@ -3,9 +3,7 @@ package main;
 import cards.*;
 import view.*;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 
 public class Player{
@@ -17,6 +15,7 @@ public class Player{
     private LinkedList<Card> playPile;
     private LinkedList<Player> players;
 
+    //Konstruktor
     public Player(LinkedList<Card> drawPile, LinkedList<Card> playPile, LinkedList<Player> players,Integer drawCount){
         this.myTurn = false;
         this.drawCount = drawCount;
@@ -27,62 +26,65 @@ public class Player{
         this.players = players;
         this.players.add(this);
         board.refresh();
+        giveCards(7);
     }
 
     //Spiel verlassen
     public void leaveGame(){
-
-    }
+        players.remove(this); }
 
     //Karte ziehen
     public void drawCard(){
         //Überprüfen ob Spieler am Zug ist
-        //Karte der Hand hinzufügen
+        if (myTurn) {
+            //Karte der Hand hinzufügen
+        giveCards(1);}
     }
 
     //Karte geben
-    private void giveCard(int amount){
+    private void giveCards(int amount){
         //Karten ziehen
+        for(int i=0; i == amount ;i++) {
+            hand.add(drawPile.getFirst());
+            drawPile.remove(drawPile.getFirst());
+        }
     }
 
-    /* Sollte unnötig sein
-    private boolean check(){
-        //Überprüfung ob Spieler die Karte überhaupt hat und legen kann
-        return true;
-    }*/
+    public void itsMyTurn(){
+        players.removeFirst();
+        players.addLast(this);
+    }
 
     //Karte spielen
     //Normale Karten
     public void play(Card card){
+        boolean draw2 = true;
+        boolean draw4 = true;
 
+        switch (card.getcType()){
+            case DRAWTWO:
+                drawCount += 2;
+                draw2 = false;
+            case REVERSE:
+                Collections.reverse(players);
+            case WILDFOUR:
+                drawCount += 4;
+                draw4 = false;
+                board.drawFrame(); //Farbe wünschen
+            case SKIP:
+                players.removeFirst();
+                players.addLast(this);
+            case WILD:
+                board.drawFrame();
+            default:
+               System.out.println("Guguck");
+            if (draw2 || draw4){
+                giveCards(drawCount);
+                drawCount = 0;
+            }
+
+        }
     }
-
-    /*
-    //Zwei ziehen
-    public void play(DrawTwo card){
-
-    }
-
-    //Seitenwechsel
-    public void play(Reverse card){
-
-    }
-
-    //Aussetzen
-    public void play(Skip card){
-
-    }
-
-    //Wunschkarte
-    public void play(Wild card){
-
-    }
-
-    //4+
-    public void play(WildDrawFour card){
-
-    }
-    */
 
     public ArrayList<Card> getHand() {
         return hand;
