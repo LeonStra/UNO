@@ -1,10 +1,7 @@
 package server;
 
 import bothSides.*;
-import client.*;
 
-import java.io.Serializable;
-import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
@@ -14,24 +11,26 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
     private boolean myTurn;
     private Integer drawCount;
     private ArrayList<Card> hand;
-    private BoardFrame board;
+    //private BoardFrame board;
     private LinkedList<Card> drawPile;
     private LinkedList<Card> playPile;
     private LinkedList<PlayerImpl> players;
 
     //Konstruktor
     public PlayerImpl(LinkedList<Card> drawPile, LinkedList<Card> playPile, LinkedList<PlayerImpl> players, Integer drawCount) throws RemoteException {
-        super();
         this.myTurn = false;
         this.drawCount = drawCount;
         this.hand = new ArrayList<>();
-        giveCards(7);
-        this.board = new BoardFrame(this);
+        //this.board = new BoardFrame(this);
         this.drawPile = drawPile;
         this.playPile = playPile;
         this.players = players;
         this.players.add(this);
-        board.refresh();
+        //board.refresh();
+        giveCards(7);
+        for (Card i : hand){
+            System.out.println(i.getPath());
+        }
     }
 
     //Spiel verlassen
@@ -49,7 +48,7 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
     //Karte geben
     private void giveCards(int amount){
         //Karten ziehen
-        for(int i=0; i == amount ;i++) {
+        for(int i=0; i<amount ;i++) {
             hand.add(drawPile.getFirst());
             drawPile.remove(drawPile.getFirst());
         }
@@ -75,12 +74,12 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
             case WILDFOUR:
                 drawCount += 4;
                 draw4 = false;
-                board.drawFrame(); //Farbe wünschen
+                //board.drawFrame(); //Farbe wünschen
             case SKIP:
                 players.removeFirst();
                 players.addLast(this);
             case WILD:
-                board.drawFrame();
+                //board.drawFrame();
             default:
                System.out.println("Guguck");
             if (draw2 || draw4){

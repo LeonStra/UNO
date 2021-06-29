@@ -2,26 +2,28 @@ package server;
 
 import bothSides.*;
 
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.net.MalformedURLException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
+import java.util.function.Predicate;
 
-public class Server extends UnicastRemoteObject {
+public class Server{
     //"Datenmodell"
-    private static String serverLocation = "//localhost/player/";
-    private static int port = 6666;
-    private static int connPort = 6780; //ASCII für CP
-    private ArrayList<String> idList;
+    private String serverLocation = "//localhost/player/";
+    private final int connPort = 6780; //ASCII für CP
+    private int port = 6666;
     private boolean pending = true;
-    private static LinkedList<bothSides.Card> drawPile = new LinkedList<Card>();
-    private static LinkedList<bothSides.Card> playPile = new LinkedList<Card>();
-    private static LinkedList<PlayerImpl> players= new LinkedList<PlayerImpl>();
-    private static Integer drawCount = 0; //Adapterklasse, damit die Zahl global aktualisiert wird
+    private ArrayList<String> idList = new ArrayList<>();
+    private LinkedList<bothSides.Card> drawPile = new LinkedList<Card>();
+    private LinkedList<bothSides.Card> playPile = new LinkedList<Card>();
+    private LinkedList<PlayerImpl> players= new LinkedList<PlayerImpl>();
+    private Integer drawCount = 0; //Adapterklasse, damit die Zahl global aktualisiert wird
 
     //Thread der die Verbindung zu einem Client herstellt
     private class ConnectionThread extends Thread{
@@ -32,10 +34,10 @@ public class Server extends UnicastRemoteObject {
         }
 
         public void run(){
-            System.out.println("new Thread");
-            BufferedWriter toClient = null;
-            //ID erstellen
+            BufferedWriter toClient;
             String id;
+
+            //ID erstellen
             do {
                 id = Integer.toString((int)(Math.random()*999999));
             }while (idList.contains(id));
@@ -45,13 +47,14 @@ public class Server extends UnicastRemoteObject {
             try {
                 Player player = new PlayerImpl(drawPile,playPile,players,drawCount);
                 System.out.println(serverLocation+id);
-                Naming.rebind("//localhost/Player",player);
+                Naming.rebind(serverLocation+id,player);
             } catch (RemoteException e) {
                 e.printStackTrace();
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             }
 
+            //Client antworten
             try {
                 toClient = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(),"utf-8"));
                 toClient.write(id);
@@ -65,22 +68,13 @@ public class Server extends UnicastRemoteObject {
 
     //Exceptions müssen noch behandelt werden
     public static void main(String[] args) throws IOException {
-        //Server server = new Server();
-        java.rmi.registry.LocateRegistry.createRegistry(1099);
-        Player player = new PlayerImpl(drawPile,playPile,players,drawCount);
-        Naming.rebind("//localhost/Player",player);
-        System.out.println("Server started");
+        Server server = new Server();
     }
 
-    public Server() throws IOException {
-        idList = new ArrayList<>();
-
+    public Server () throws IOException {
+        createDeck();
         ServerSocket serversocket = new ServerSocket(connPort);
-        java.rmi.registry.LocateRegistry.createRegistry(port);
-        PlayerImpl player = new PlayerImpl(drawPile,playPile,players,drawCount);
-        Naming.rebind("//localhost/Player",player);
-        System.out.println("Server started");
-
+        java.rmi.registry.LocateRegistry.createRegistry(1099);
         while (pending){
             Socket socket = serversocket.accept();
             Thread serviceThread = new ConnectionThread(socket);
@@ -89,25 +83,15 @@ public class Server extends UnicastRemoteObject {
         System.out.println("fertig");
     }
 
-    public void start(){
-        pending = false;
-    }
-
     public void createDeck(){
-        //Typen vorbereiten
-        List<TYPE> typeList = Arrays.stream(TYPE.values()).toList();
-        typeList.removeAll(TYPE.getExcluded());
-
-        //Farben vorbereiten
-        List<COLOR> colorList = Arrays.stream(COLOR.values()).toList();
-        colorList.removeAll(COLOR.getExcluded());
-
         //Deck bilden
         for (int i=0;i<2;i++){
-            for(TYPE t : typeList) {
-                for (COLOR c : colorList) {
-                    if (t == TYPE.ZERO){continue;} //Nur eine Null pro Farbe
-                    drawPile.add(new Card(t, c));
+            for(TYPE t : TYPE.values()) {
+                if (TYPE.getExcluded().contains(t)){continue;}
+                for (COLOR c : COLOR.values()) {
+                    Card card = new Card(t,c);
+                    if ((t == TYPE.ZERO && i==1)||COLOR.getExcluded().contains(c)){continue;}
+                    drawPile.add(card);
                 }
             }
         }
