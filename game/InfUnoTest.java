@@ -1,10 +1,5 @@
 //Zum Testen des Programms
 
-import cards.*;
-import main.*;
-
-import java.util.*;
-
 public class InfUnoTest {
 
     /*public static void main(String[] args) {

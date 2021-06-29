@@ -1,6 +1,6 @@
-package cards;
+package bothSides;
 
-import main.Player;
+import server.PlayerImpl;
 
 public class Card{
     private final static String path = "media/cards/";
@@ -15,7 +15,7 @@ public class Card{
         this.color = c;
     }
 
-    public void action(Player player){
+    public void action(PlayerImpl player){
 
     }
 

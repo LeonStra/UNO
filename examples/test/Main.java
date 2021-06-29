@@ -4,9 +4,12 @@ import java.util.ArrayList;
 
 public class Main {
     public static void main(String[] args){
-        Main m = new Main();
-        Sup s = new Sub();
-        m.test(s);
+        ArrayList<String> a = new ArrayList<>();
+        a.add("hi");
+        a.add("ho");
+        System.out.println(a.contains("hi"));
+        System.out.println(a.contains("ho"));
+        System.out.println(a.contains("hi"));
     }
 
     public void test(Sup s){

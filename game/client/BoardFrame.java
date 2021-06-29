@@ -1,20 +1,21 @@
-package view;
+package client;
 
-import cards.COLOR;
-import cards.Card;
-import cards.TYPE;
-import main.Player;
+import bothSides.COLOR;
+import bothSides.Card;
+import bothSides.TYPE;
+import server.PlayerImpl;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.*;
+import java.rmi.RemoteException;
 
 public class BoardFrame extends JFrame {
     private final Dimension cardDimension = new Dimension(101,151);
-    private Player player;
+    private PlayerImpl player;
 
-    public BoardFrame(Player player){
+    public BoardFrame(PlayerImpl player){
         super("UNO");
         this.player = player;
 
@@ -69,7 +70,13 @@ public class BoardFrame extends JFrame {
         b.addActionListener(new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                player.drawCard();
+                try {
+                    player.drawCard();
+                } catch (InterruptedException interruptedException) {
+                    interruptedException.printStackTrace();
+                } catch (RemoteException remoteException) {
+                    remoteException.printStackTrace();
+                }
             }
         });
         drawPanel.add(b);

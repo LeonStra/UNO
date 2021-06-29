@@ -1,32 +1,37 @@
-package main;
+package server;
 
-import cards.*;
-import view.*;
+import bothSides.*;
+import client.*;
 
+import java.io.Serializable;
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
 
 
-public class Player{
+public class PlayerImpl extends UnicastRemoteObject implements Player {
     private boolean myTurn;
     private Integer drawCount;
     private ArrayList<Card> hand;
     private BoardFrame board;
     private LinkedList<Card> drawPile;
     private LinkedList<Card> playPile;
-    private LinkedList<Player> players;
+    private LinkedList<PlayerImpl> players;
 
     //Konstruktor
-    public Player(LinkedList<Card> drawPile, LinkedList<Card> playPile, LinkedList<Player> players,Integer drawCount){
+    public PlayerImpl(LinkedList<Card> drawPile, LinkedList<Card> playPile, LinkedList<PlayerImpl> players, Integer drawCount) throws RemoteException {
+        super();
         this.myTurn = false;
         this.drawCount = drawCount;
         this.hand = new ArrayList<>();
+        giveCards(7);
         this.board = new BoardFrame(this);
         this.drawPile = drawPile;
         this.playPile = playPile;
         this.players = players;
         this.players.add(this);
         board.refresh();
-        giveCards(7);
     }
 
     //Spiel verlassen
@@ -34,7 +39,7 @@ public class Player{
         players.remove(this); }
 
     //Karte ziehen
-    public void drawCard(){
+    public void drawCard() throws InterruptedException, RemoteException{
         //Überprüfen ob Spieler am Zug ist
         if (myTurn) {
             //Karte der Hand hinzufügen
