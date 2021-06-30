@@ -6,35 +6,18 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.Socket;
-import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 
 public class BoardFrame extends JFrame {
     private final Dimension cardDimension = new Dimension(101,151);
     private Player player;
-    private final String ip = "127.0.0.1";
-    private String id;
 
-
-    public static void main(String[] args) throws IOException, NotBoundException, InterruptedException {
-        BoardFrame boardFrame = new BoardFrame();
-    }
-
-    public BoardFrame() throws IOException, InterruptedException, NotBoundException {
+    public BoardFrame(Player player) throws IOException, InterruptedException{
         super("UNO");
-        //this.player = player;
 
-        Socket socket = new Socket(ip, 6780);
-
-        BufferedReader fromServer = new BufferedReader(new InputStreamReader(socket.getInputStream(), "utf-8"));
-        id = fromServer.readLine();
-        System.out.println("rmi://"+ip+"/player/"+id);
-        player = (Player) Naming.lookup("rmi://"+ip+"/player/"+id);
+        this.player = player;
 
         //Fenster Einstellungen
         setSize(1200,800);
@@ -61,6 +44,7 @@ public class BoardFrame extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 try {
                     player.play(card);
+                    refresh();
                 } catch (InterruptedException interruptedException) {
                     interruptedException.printStackTrace();
                 } catch (RemoteException remoteException) {

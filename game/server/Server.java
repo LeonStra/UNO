@@ -8,17 +8,18 @@ import java.io.OutputStreamWriter;
 import java.net.MalformedURLException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.util.*;
-import java.util.function.Predicate;
 
 public class Server{
     //"Datenmodell"
     private String serverLocation = "//localhost/player/";
     private final int connPort = 6780; //ASCII für CP
-    private int port = 6666;
     private boolean pending = true;
+    private ServerSocket serversocket;
+    private ArrayList<Socket> sockets= new ArrayList<>();
     private ArrayList<String> idList = new ArrayList<>();
     private LinkedList<bothSides.Card> drawPile = new LinkedList<Card>();
     private LinkedList<bothSides.Card> playPile = new LinkedList<Card>();
@@ -59,7 +60,6 @@ public class Server{
                 toClient = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(),"utf-8"));
                 toClient.write(id);
                 toClient.flush();
-                socket.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -67,23 +67,38 @@ public class Server{
     }
 
     //Exceptions müssen noch behandelt werden
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException{
         Server server = new Server();
+        ServerFrame frame = new ServerFrame(server);
+        server.startSockets();
     }
 
-    public Server () throws IOException {
+    private Server () throws IOException {
         createDeck();
-        ServerSocket serversocket = new ServerSocket(connPort);
+    }
+
+    private void startSockets() throws IOException {
+        serversocket = new ServerSocket(connPort);
         java.rmi.registry.LocateRegistry.createRegistry(1099);
         while (pending){
-            Socket socket = serversocket.accept();
-            Thread serviceThread = new ConnectionThread(socket);
-            serviceThread.start();
+            try {
+                Socket socket = serversocket.accept();
+                sockets.add(socket);
+                Thread serviceThread = new ConnectionThread(socket);
+                serviceThread.start();
+            }catch (SocketException e){ }
         }
-        System.out.println("fertig");
     }
 
-    public void createDeck(){
+    void start() throws IOException {
+        pending = false;
+        serversocket.close();
+        for(Socket s : sockets){
+            s.close();
+        }
+    }
+
+    private void createDeck(){
         //Deck bilden
         for (int i=0;i<2;i++){
             for(TYPE t : TYPE.values()) {

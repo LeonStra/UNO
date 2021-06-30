@@ -69,24 +69,28 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
             case DRAWTWO:
                 drawCount += 2;
                 draw2 = false;
+                break;
             case REVERSE:
                 Collections.reverse(players);
+                break;
             case WILDFOUR:
                 drawCount += 4;
                 draw4 = false;
+                break;
                 //board.drawFrame(); //Farbe wünschen
             case SKIP:
                 players.removeFirst();
                 players.addLast(this);
+                break;
             case WILD:
                 //board.drawFrame();
-            default:
-               System.out.println("Guguck");
-            if (draw2 || draw4){
-                giveCards(drawCount);
-                drawCount = 0;
-            }
-
+                break;
+        }
+        System.out.println("Guguck");
+        hand.remove(card);
+        if (draw2 || draw4){
+            giveCards(drawCount);
+            drawCount = 0;
         }
     }
 
