@@ -50,8 +50,8 @@ public class Client {
         JPanel form = new JPanel();
         form.setBorder(new EmptyBorder(50,0,0,0));
 
-        JTextField ipInput = new JTextField("IP",inputW);
-        JTextField portInput = new JTextField("PORT",inputW);
+        JTextField ipInput = new JTextField("127.0.0.1",inputW);
+        JTextField portInput = new JTextField("6780",inputW);
         JLabel colon = new JLabel(":");
 
         ipInput.setFont(inputFont);

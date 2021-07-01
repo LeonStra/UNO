@@ -10,7 +10,7 @@ import java.util.*;
 public class PlayerImpl extends UnicastRemoteObject implements Player {
     private boolean myTurn;
     private Integer drawCount;
-    private ArrayList<Card> hand;
+    private Hand hand;
     //private BoardFrame board;
     private LinkedList<Card> drawPile;
     private LinkedList<Card> playPile;
@@ -20,7 +20,7 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
     public PlayerImpl(LinkedList<Card> drawPile, LinkedList<Card> playPile, LinkedList<PlayerImpl> players, Integer drawCount) throws RemoteException {
         this.myTurn = false;
         this.drawCount = drawCount;
-        this.hand = new ArrayList<>();
+        this.hand = new Hand();
         //this.board = new BoardFrame(this);
         this.drawPile = drawPile;
         this.playPile = playPile;
@@ -38,11 +38,10 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
         players.remove(this); }
 
     //Karte ziehen
-    public void drawCard() throws InterruptedException, RemoteException{
-        //Überprüfen ob Spieler am Zug ist
+    public void drawCard() throws RemoteException{
         if (myTurn) {
-            //Karte der Hand hinzufügen
-        giveCards(1);}
+            giveCards(1);
+        }
     }
 
     //Karte geben
@@ -67,27 +66,36 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
 
         switch (card.getcType()){
             case DRAWTWO:
+                System.out.println("2+");
                 drawCount += 2;
                 draw2 = false;
                 break;
             case REVERSE:
+                System.out.println("Reverse");
                 Collections.reverse(players);
                 break;
             case WILDFOUR:
+                System.out.println("4+");
                 drawCount += 4;
                 draw4 = false;
                 break;
                 //board.drawFrame(); //Farbe wünschen
             case SKIP:
+                System.out.println("SKIP");
                 players.removeFirst();
                 players.addLast(this);
                 break;
             case WILD:
+                System.out.println("Wunschkarte");
                 //board.drawFrame();
                 break;
         }
-        System.out.println("Guguck");
+        System.out.println("Play");
+        System.out.println(hand);
         hand.remove(card);
+        playPile.addFirst(card);
+        System.out.println(hand);
+        System.out.println(playPile);
         if (draw2 || draw4){
             giveCards(drawCount);
             drawCount = 0;

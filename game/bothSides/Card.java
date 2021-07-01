@@ -1,7 +1,5 @@
 package bothSides;
 
-import server.PlayerImpl;
-
 import java.io.Serializable;
 
 public class Card implements Serializable {
@@ -17,13 +15,13 @@ public class Card implements Serializable {
         this.color = c;
     }
 
-    public void action(PlayerImpl player){
-
-    }
-
     //Regel zum Legen
     public boolean suitable(Card c) {
         return color.equals(c.color) || c.color.equals(COLOR.MULTICOLORED) || type.equals(c.cType)?true:false;
+    }
+
+    public boolean equals(Card c){
+        return color.equals(c.color) && cType.equals(c.cType);
     }
 
     //Pfad der Karte

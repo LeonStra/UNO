@@ -116,5 +116,7 @@ public class Server{
             drawPile.add(new Card(TYPE.WILDFOUR,COLOR.MULTICOLORED));
         }
         Collections.shuffle(drawPile);
+        playPile.addFirst(drawPile.getFirst());
+        drawPile.removeFirst();
     }
 }
