@@ -1,5 +1,7 @@
 package server;
 
+import Exceptions.TurnException;
+
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -29,7 +31,7 @@ public class ServerFrame extends JFrame {
                 try {
                     dispose();
                     server.start();
-                } catch (IOException ioException) {
+                } catch (IOException | TurnException ioException) {
                     ioException.printStackTrace();
                 }
             }

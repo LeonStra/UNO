@@ -1,5 +1,6 @@
 package server;
 
+import Exceptions.TurnException;
 import bothSides.*;
 
 import java.io.BufferedWriter;
@@ -49,9 +50,7 @@ public class Server{
                 Player player = new PlayerImpl(drawPile,playPile,players,drawCount);
                 System.out.println(serverLocation+id);
                 Naming.rebind(serverLocation+id,player);
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            } catch (MalformedURLException e) {
+            } catch (RemoteException | MalformedURLException e) {
                 e.printStackTrace();
             }
 
@@ -90,12 +89,15 @@ public class Server{
         }
     }
 
-    void start() throws IOException {
+    void start() throws IOException, TurnException {
         pending = false;
+        Collections.shuffle(players);
+        players.getFirst().itsMyTurn();
         serversocket.close();
         for(Socket s : sockets){
             s.close();
         }
+
     }
 
     private void createDeck(){

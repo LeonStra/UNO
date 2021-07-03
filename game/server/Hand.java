@@ -1,6 +1,7 @@
 package server;
 
 import bothSides.Card;
+import bothSides.TYPE;
 
 import java.util.ArrayList;
 
@@ -13,5 +14,13 @@ public class Hand extends ArrayList<Card>{
             }
         }
         return false;
+    }
+
+    public boolean contains(Card card){
+        return this.stream().anyMatch(c -> c.equals(card));
+    }
+
+    public boolean containsType(TYPE type){
+        return this.stream().anyMatch(c -> c.equalType(type));
     }
 }

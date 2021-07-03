@@ -85,8 +85,8 @@ public class Client {
             String id = fromServer.readLine();
             socket.close();
             System.out.println("rmi://"+ip+"/player/"+id);
-            BoardFrame boardFrame = new BoardFrame((Player) Naming.lookup("rmi://"+ip+"/player/"+id));
-        } catch (IOException | NotBoundException | InterruptedException e) {
+            Playground playground = new Playground((Player) Naming.lookup("rmi://"+ip+"/player/"+id));
+        } catch (IOException | NotBoundException e) {
             e.printStackTrace();
         }
     }

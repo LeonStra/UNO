@@ -17,9 +17,16 @@ public class Card implements Serializable {
 
     //Regel zum Legen
     public boolean suitable(Card c) {
-        return color.equals(c.color) || c.color.equals(COLOR.MULTICOLORED) || type.equals(c.cType)?true:false;
+        return equalType(c.cType) || equalColor(c.color) || c.color == COLOR.MULTICOLORED || this.color == COLOR.MULTICOLORED?true:false;
     }
 
+    public boolean equalType(TYPE t){
+        return this.cType == t;
+    }
+
+    public boolean equalColor(COLOR c){
+        return this.color == c;
+    }
     public boolean equals(Card c){
         return color.equals(c.color) && cType.equals(c.cType);
     }

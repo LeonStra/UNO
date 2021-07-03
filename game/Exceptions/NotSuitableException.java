@@ -5,7 +5,5 @@ public class NotSuitableException extends Exception{
         super(message);
     }
 
-    public NotSuitableException(Throwable cause){
-        super(cause);
-    }
+    public NotSuitableException(){ }
 }
