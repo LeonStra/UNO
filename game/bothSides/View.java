@@ -7,4 +7,5 @@ public interface View extends Remote {
     void refresh() throws RemoteException;
     void drawOrCounter(int drawCount) throws RemoteException;
     void selectColor() throws RemoteException;
+    void setNews(String txt) throws RemoteException;
 }

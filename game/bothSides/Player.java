@@ -11,7 +11,6 @@ public interface Player extends Remote {
     void leaveGame() throws  RemoteException;
     void drawCard() throws RemoteException;
     void takeDrawCount() throws RemoteException;
-    void itsMyTurn() throws RemoteException, TurnException;
     void play(Card card) throws RemoteException, NotSuitableException;
     void wish(COLOR color) throws RemoteException;
 
@@ -19,4 +18,5 @@ public interface Player extends Remote {
     void setView(View view) throws RemoteException;
     ArrayList<Card> getHand() throws RemoteException;
     Card getTop() throws RemoteException;
+    ArrayList<String> getNameList() throws RemoteException;
 }

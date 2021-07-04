@@ -92,7 +92,7 @@ public class Server{
     void start() throws IOException, TurnException {
         pending = false;
         Collections.shuffle(players);
-        players.getFirst().itsMyTurn();
+        players.getFirst().startPlayer();
         serversocket.close();
         for(Socket s : sockets){
             s.close();

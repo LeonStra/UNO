@@ -5,21 +5,26 @@ import bothSides.*;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.plaf.ListUI;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 
 public class Playground extends UnicastRemoteObject implements View{
     private final Dimension cardDimension = new Dimension(101,151);
     private Player player;
 
     private JFrame frame;
+    private JPanel northPanel;
     private JPanel southPanel;
     private JPanel handPanel;
     private JPanel drawPanel;
     private JPanel playPanel;
+    private JPanel westPanel;
+    private JLabel news;
 
     public Playground(Player player) throws IOException{
         this.player = player;
@@ -28,6 +33,8 @@ public class Playground extends UnicastRemoteObject implements View{
         this.handPanel = new JPanel();
         this.drawPanel= new JPanel();
         this.playPanel = new JPanel();
+        this.northPanel = new JPanel();
+        this.westPanel = new JPanel();
 
         this.player.setView(this);
 
@@ -51,9 +58,10 @@ public class Playground extends UnicastRemoteObject implements View{
         });
 
         //Panel Einstellungen
-        handPanel.setBorder(new EmptyBorder(0,0,0,0));
-        drawPanel.setBorder(new EmptyBorder(0,0,0,0));
-        playPanel.setLayout(new GridLayout(2,1));
+        EmptyBorder noBorder = new EmptyBorder(0,0,0,0);
+        handPanel.setBorder(noBorder);
+        drawPanel.setBorder(noBorder);
+        playPanel.setLayout(new GridLayout(1,2));
 
         //Nachziehstapel
         JButton drawButton = newCardButton(new Card(TYPE.UNKNOWN, COLOR.UNKNOWN),false);
@@ -70,14 +78,54 @@ public class Playground extends UnicastRemoteObject implements View{
         drawPanel.add(drawButton);
 
         //Zusammensetzen
-        refresh();
         southPanel.add(handPanel);
         southPanel.add(drawPanel);
+        frame.add(northPanel, BorderLayout.NORTH);
+        frame.add(westPanel, BorderLayout.WEST);
         frame.add(southPanel, BorderLayout.SOUTH);
         frame.add(playPanel, BorderLayout.CENTER);
         frame.setVisible(true);
+        refresh();
+        init();
     }
 
+    private void init() throws RemoteException {
+        //West Panel
+        westPanel.setPreferredSize(new Dimension(200,frame.getHeight()));
+        westPanel.setBackground(Color.YELLOW);
+        System.out.println(player.getNameList().toArray());
+        JList list = new JList(player.getNameList().toArray());
+        list.setFont(new Font("Arial",0,25));
+        list.setPreferredSize(new Dimension(200,list.getPreferredSize().height));
+        list.setSelectionBackground(null);
+        list.setFocusable(false);
+        westPanel.add(list);
+
+
+        //North Panel
+        news = new JLabel("Start",SwingConstants.CENTER);
+        news.setFont(new Font("Arial",0,50));
+        news.setPreferredSize(new Dimension(frame.getWidth()-150,news.getPreferredSize().height));
+        northPanel.add(news);
+
+        JButton chat = new JButton();
+        chat.setBorderPainted(false);
+        chat.setBorder(new EmptyBorder(0,0,0,0));
+        chat.setFocusPainted(false);
+        chat.setContentAreaFilled(false);
+        chat.setIcon(new ImageIcon("media/symbols/chat.jpg"));
+        northPanel.add(chat);
+
+        JButton settings = new JButton();
+        settings.setBorderPainted(false);
+        settings.setBorder(new EmptyBorder(0,0,0,0));
+        settings.setFocusPainted(false);
+        settings.setContentAreaFilled(false);
+        settings.setIcon(new ImageIcon("media/symbols/settings.png"));
+        northPanel.add(settings);
+
+        northPanel.setPreferredSize(new Dimension(frame.getWidth(),northPanel.getPreferredSize().height));
+    }
     //Einrichten einer Handkarte
     private JButton newCardButton(Card card,boolean play){
         JButton b = new JButton();
@@ -136,6 +184,7 @@ public class Playground extends UnicastRemoteObject implements View{
         SwingUtilities.invokeLater(() -> colorDialog());
     }
 
+    //Dialogs
     //Dialog zur Entscheidung, ob man zieht
     private void drawDialog(int drawCount){
         UnoDialog drawDialog = new UnoDialog(frame,"Ziehen", "Kartenumfang: " + drawCount);
@@ -193,4 +242,9 @@ public class Playground extends UnicastRemoteObject implements View{
         colorDialog.setVisible(true);
     }
 
+    //Getter/Setter
+    public void setNews(String txt){
+        news.setText(txt);
+        frame.revalidate();
+    }
 }

@@ -6,11 +6,11 @@ import bothSides.*;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-import java.sql.Struct;
 import java.util.*;
 
 
 public class PlayerImpl extends UnicastRemoteObject implements Player {
+    private String name;
     private boolean myTurn;
     private boolean increased;
     private Integer drawCount;
@@ -30,6 +30,7 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
         this.playPile = playPile;
         this.players = players;
         this.players.add(this);
+        this.name = "Hallo";
     }
 
     //Spiel verlassen
@@ -63,6 +64,11 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
     }
 
     //Am Zug
+    public void startPlayer(){
+        players.removeFirst();
+        players.addLast(this);
+        myTurn = true;
+    }
     public void next() throws RemoteException {
         if (!increased && drawCount > 0){
             takeDrawCount();
@@ -76,12 +82,12 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
         }
     }
 
-    @Override
     public void itsMyTurn() throws RemoteException, TurnException {
         if (!players.getFirst().equals(this)){throw new TurnException();}
         players.removeFirst();
         players.addLast(this);
         myTurn = true;
+        view.refresh();
 
         //Ziehen?
         if (drawCount > 0){
@@ -115,6 +121,7 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
                     System.out.println("SKIP");
                     players.removeFirst();
                     players.addLast(this);
+                    view.setNews("Aussetzen");
                     break;
                 case WILD:
                     System.out.println("Wunschkarte");
@@ -154,10 +161,7 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
     public void setView(View view) throws RemoteException {
         if (this.view == null) {
             this.view = view;
-            //giveCards(7);
-            for (int i = 0; i < 4; i++) {
-                hand.add(new Card(TYPE.WILDFOUR, COLOR.MULTICOLORED));
-            }
+            giveCards(7);
         }
     }
     @Override
@@ -172,5 +176,18 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
         catch (NoSuchElementException e){
             return new Card(TYPE.UNKNOWN,COLOR.UNKNOWN);
         }
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public ArrayList<String> getNameList() throws RemoteException {
+        ArrayList<String> names = new ArrayList<>();
+        for (PlayerImpl p : players){
+            names.add(p.getName());
+        }
+        return names;
     }
 }
