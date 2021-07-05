@@ -8,6 +8,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
+import java.net.Inet4Address;
+import java.net.UnknownHostException;
 
 public class ServerFrame extends JFrame {
 
@@ -24,6 +26,15 @@ public class ServerFrame extends JFrame {
             }
         });
 
+        JPanel panel = new JPanel();
+
+        JLabel ip = new JLabel("X");
+        try {
+            ip = new JLabel(Inet4Address.getLocalHost().getHostAddress().toString());
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
+
         JButton b = new JButton("LOS!");
         b.addActionListener(new ActionListener() {
             @Override
@@ -36,7 +47,9 @@ public class ServerFrame extends JFrame {
                 }
             }
         });
-        add(b);
+        panel.add(ip);
+        panel.add(b);
+        add(panel);
         setVisible(true);
     }
 }
