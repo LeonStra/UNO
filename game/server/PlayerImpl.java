@@ -1,7 +1,6 @@
 package server;
 
-import Exceptions.NotSuitableException;
-import Exceptions.TurnException;
+import Exceptions.*;
 import bothSides.*;
 
 import java.rmi.RemoteException;
@@ -13,6 +12,7 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
     private String name;
     private boolean myTurn;
     private boolean increased;
+    private boolean cardDrawn;
     private Integer drawCount;
     private Hand hand;
     private LinkedList<Card> drawPile;
@@ -20,7 +20,7 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
     private LinkedList<PlayerImpl> players;
     private View view;
 
-    //Konstruktor
+    //Spieler initialisieren
     public PlayerImpl(LinkedList<Card> drawPile, LinkedList<Card> playPile, LinkedList<PlayerImpl> players, Integer drawCount) throws RemoteException {
         this.myTurn = false;
         this.increased = false;
@@ -30,7 +30,7 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
         this.playPile = playPile;
         this.players = players;
         this.players.add(this);
-        this.name = "Hallo";
+        this.name = "Ubekannt";
     }
 
     //Spiel verlassen
@@ -38,14 +38,7 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
     public void leaveGame(){
         players.remove(this); }
 
-    //Karten
-    @Override
-    public void drawCard() throws RemoteException{
-        if (myTurn) {
-            giveCards(1);
-        }
-    }
-
+    //Karten hinzufügen
     private void giveCards(int amount) throws RemoteException {
         //Karten ziehen
         for(int i=0; i<amount ;i++) {
@@ -55,6 +48,7 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
         view.refresh();
     }
 
+    //--
     @Override
     public void takeDrawCount() throws RemoteException {
         if (myTurn) {
@@ -64,15 +58,19 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
     }
 
     //Am Zug
+    //StartSpieler
     public void startPlayer(){
         players.removeFirst();
         players.addLast(this);
         myTurn = true;
     }
+
+    //Ablschuss des Zuges
     public void next() throws RemoteException {
         if (!increased && drawCount > 0){
             takeDrawCount();
         }
+        cardDrawn = false;
         increased = false;
         myTurn = false;
         try {
@@ -82,12 +80,13 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
         }
     }
 
+    //Beginn des Zuges
     public void itsMyTurn() throws RemoteException, TurnException {
         if (!players.getFirst().equals(this)){throw new TurnException();}
         players.removeFirst();
         players.addLast(this);
         myTurn = true;
-        view.refresh();
+        everyoneRefresh();
 
         //Ziehen?
         if (drawCount > 0){
@@ -145,7 +144,20 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
         } else {throw new NotSuitableException();}
     }
 
-    //Aktion Rückrufe
+    //Kommunikation mit view
+    //Von jedem Spieler die Ansicht erneuern
+    private void everyoneRefresh() throws RemoteException {
+        for (PlayerImpl p : players){
+            p.refreshView();
+        }
+    }
+
+    //Ansicht erneuern
+    public void refreshView() throws RemoteException {
+        view.refresh();
+    }
+
+    //gewünschte Farbe
     @Override
     public void wish(COLOR c) throws RemoteException {
         TYPE t = playPile.getFirst().getcType();
@@ -156,6 +168,15 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
         System.out.println(playPile.getFirst().getPath());
     }
 
+    //Karte ziehen
+    @Override
+    public void drawCard() throws RemoteException{
+        if (myTurn && !cardDrawn) {
+            giveCards(1);
+            cardDrawn = true;
+        }
+    }
+
     //Getter/Setter
     @Override
     public void setView(View view) throws RemoteException {
@@ -163,6 +184,10 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
             this.view = view;
             giveCards(7);
         }
+    }
+    @Override
+    public void setName(String name){
+        this.name = name;
     }
     @Override
     public ArrayList<Card> getHand() {
@@ -177,17 +202,17 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
             return new Card(TYPE.UNKNOWN,COLOR.UNKNOWN);
         }
     }
-
-    public String getName() {
-        return name;
-    }
-
     @Override
-    public ArrayList<String> getNameList() throws RemoteException {
-        ArrayList<String> names = new ArrayList<>();
+    public LinkedList<String> getNameList() throws RemoteException {
+        LinkedList<String> names = new LinkedList<>();
         for (PlayerImpl p : players){
             names.add(p.getName());
         }
+        names.addFirst(names.getLast());
+        names.removeLast();
         return names;
+    }
+    public String getName() {
+        return name;
     }
 }

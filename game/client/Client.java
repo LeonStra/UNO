@@ -1,6 +1,7 @@
 package client;
 
 import bothSides.Player;
+import server.PlacholderInput;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -9,9 +10,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.Socket;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
@@ -45,39 +44,53 @@ public class Client {
 
         //Formular
         Font inputFont = new Font("Arial",0,20);
-        int inputW = 15;
+        int width = 15;
 
         JPanel form = new JPanel();
         form.setBorder(new EmptyBorder(50,0,0,0));
 
-        JTextField ipInput = new JTextField("127.0.0.1",inputW);
-        JTextField portInput = new JTextField("6780",inputW);
+        //Eingabe zur Verbindung
+        PlacholderInput ipInput = new PlacholderInput("127.0.0.1",width,inputFont);
         JLabel colon = new JLabel(":");
-
-        ipInput.setFont(inputFont);
         colon.setFont(inputFont);
-        portInput.setFont(inputFont);
+        PlacholderInput portInput = new PlacholderInput("6780",width,inputFont);
 
+        //Name
+        PlacholderInput nameInput = new PlacholderInput("Name",width,inputFont);
+
+        //BestätigungsButton
         JButton submit = new JButton("Bestätigen");
         submit.setPreferredSize(new Dimension(100,30));
         submit.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 startFrame.dispose();
-                setConn(ipInput.getText(),Integer.parseInt(portInput.getText()));
+                setConn(ipInput.getText(),Integer.parseInt(portInput.getText()),nameInput.getText());
             }
         });
 
+        JLabel ipLabel = new JLabel("Verbindung:",JLabel.CENTER);
+        ipLabel.setBorder(new EmptyBorder(25,0,10,0));
+        ipLabel.setPreferredSize(new Dimension(startFrame.getWidth(),ipLabel.getPreferredSize().height));
+        ipLabel.setFont(inputFont);
+
+        JLabel placeholder = new JLabel("");
+        placeholder.setPreferredSize(new Dimension(startFrame.getWidth(),0));
+
+        form.add(nameInput);
+        form.add(ipLabel);
         form.add(ipInput);
         form.add(colon);
         form.add(portInput);
+        form.add(placeholder);
         form.add(submit);
 
         startFrame.add(form,BorderLayout.CENTER);
         startFrame.setVisible(true);
+        SwingUtilities.invokeLater(() -> startFrame.requestFocus());
     }
 
-    public void setConn(String ip, int port){
+    public void setConn(String ip, int port, String name){
         Socket socket = null;
         try {
             socket = new Socket(ip, port);
@@ -85,7 +98,7 @@ public class Client {
             String id = fromServer.readLine();
             socket.close();
             System.out.println("rmi://"+ip+"/player/"+id);
-            Playground playground = new Playground((Player) Naming.lookup("rmi://"+ip+"/player/"+id));
+            Playground playground = new Playground((Player) Naming.lookup("rmi://"+ip+"/player/"+id),name);
         } catch (IOException | NotBoundException e) {
             e.printStackTrace();
         }

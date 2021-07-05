@@ -3,9 +3,7 @@ package server;
 import Exceptions.TurnException;
 import bothSides.*;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -92,6 +90,7 @@ public class Server{
     void start() throws IOException, TurnException {
         pending = false;
         Collections.shuffle(players);
+        System.out.println(players);
         players.getFirst().startPlayer();
         serversocket.close();
         for(Socket s : sockets){

@@ -5,38 +5,43 @@ import bothSides.*;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.plaf.ListUI;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.ArrayList;
 
 public class Playground extends UnicastRemoteObject implements View{
     private final Dimension cardDimension = new Dimension(101,151);
+    private final int sitesWidth = 300;
     private Player player;
+    private String name;
 
     private JFrame frame;
     private JPanel northPanel;
+    private JPanel westPanel;
+    private JPanel eastPanel;
     private JPanel southPanel;
     private JPanel handPanel;
     private JPanel drawPanel;
     private JPanel playPanel;
-    private JPanel westPanel;
+    private JList playerList;
     private JLabel news;
 
-    public Playground(Player player) throws IOException{
+    public Playground(Player player,String name) throws IOException{
         this.player = player;
         this.frame = new JFrame("INFUNO");
-        this.southPanel = new JPanel();
         this.handPanel = new JPanel();
         this.drawPanel= new JPanel();
         this.playPanel = new JPanel();
         this.northPanel = new JPanel();
         this.westPanel = new JPanel();
+        this.eastPanel = new JPanel();
+        this.southPanel = new JPanel();
+        this.playerList = new JList();
 
         this.player.setView(this);
+        this.player.setName(name);
 
         //Fenster Einstellungen
         frame.setSize(1200,800);
@@ -82,6 +87,7 @@ public class Playground extends UnicastRemoteObject implements View{
         southPanel.add(drawPanel);
         frame.add(northPanel, BorderLayout.NORTH);
         frame.add(westPanel, BorderLayout.WEST);
+        frame.add(eastPanel, BorderLayout.EAST);
         frame.add(southPanel, BorderLayout.SOUTH);
         frame.add(playPanel, BorderLayout.CENTER);
         frame.setVisible(true);
@@ -90,18 +96,6 @@ public class Playground extends UnicastRemoteObject implements View{
     }
 
     private void init() throws RemoteException {
-        //West Panel
-        westPanel.setPreferredSize(new Dimension(200,frame.getHeight()));
-        westPanel.setBackground(Color.YELLOW);
-        System.out.println(player.getNameList().toArray());
-        JList list = new JList(player.getNameList().toArray());
-        list.setFont(new Font("Arial",0,25));
-        list.setPreferredSize(new Dimension(200,list.getPreferredSize().height));
-        list.setSelectionBackground(null);
-        list.setFocusable(false);
-        westPanel.add(list);
-
-
         //North Panel
         news = new JLabel("Start",SwingConstants.CENTER);
         news.setFont(new Font("Arial",0,50));
@@ -125,6 +119,19 @@ public class Playground extends UnicastRemoteObject implements View{
         northPanel.add(settings);
 
         northPanel.setPreferredSize(new Dimension(frame.getWidth(),northPanel.getPreferredSize().height));
+
+        //West Panel bzw. playerList
+        playerList.setFont(new Font("Arial",0,25));
+        playerList.setPreferredSize(new Dimension(sitesWidth,frame.getHeight()));
+        playerList.setSelectionBackground(null);
+        playerList.setFocusable(false);
+        playerList.setBorder(new EmptyBorder(0,10,0,0));
+        westPanel.add(playerList);
+        westPanel.setPreferredSize(new Dimension(sitesWidth,frame.getHeight()));
+
+        //East Panel bzw. Chat
+        eastPanel.setPreferredSize(new Dimension(sitesWidth,frame.getHeight()));
+        eastPanel.setBackground(Color.WHITE);
     }
     //Einrichten einer Handkarte
     private JButton newCardButton(Card card,boolean play){
@@ -157,8 +164,10 @@ public class Playground extends UnicastRemoteObject implements View{
         handPanel.removeAll();
         playPanel.removeAll();
 
+        //Spielerliste
+        playerList.setListData(player.getNameList().toArray());
+
         //Handkarten
-        //handPanel.removeAll();
         for (Card card : player.getHand()){
             handPanel.add(newCardButton(card,true));
         }

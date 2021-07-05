@@ -6,6 +6,7 @@ import Exceptions.TurnException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 public interface Player extends Remote {
     void leaveGame() throws  RemoteException;
@@ -16,7 +17,8 @@ public interface Player extends Remote {
 
     //Getter/Setter
     void setView(View view) throws RemoteException;
+    void setName(String name) throws RemoteException;
     ArrayList<Card> getHand() throws RemoteException;
     Card getTop() throws RemoteException;
-    ArrayList<String> getNameList() throws RemoteException;
+    LinkedList<String> getNameList() throws RemoteException;
 }
