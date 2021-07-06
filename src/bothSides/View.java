@@ -5,6 +5,7 @@ import java.rmi.RemoteException;
 
 public interface View extends Remote {
     void refresh() throws RemoteException;
+    void changeDrawPass(boolean draw) throws RemoteException;
 
     //Dialogs
     void drawOrCounter(int drawCount) throws RemoteException;

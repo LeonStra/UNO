@@ -75,6 +75,7 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
         cardDrawn = false;
         increased = false;
         myTurn = false;
+        view.changeDrawPass(true);
         try {
             players.getFirst().itsMyTurn();
         } catch (TurnException e) {
@@ -183,6 +184,7 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
         if (myTurn && !cardDrawn) {
             giveCards(1);
             cardDrawn = true;
+            view.changeDrawPass(false);
         }else if(myTurn){
             next();
         }

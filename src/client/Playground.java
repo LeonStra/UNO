@@ -24,6 +24,7 @@ public class Playground extends UnicastRemoteObject implements View {
     private JPanel southPanel;
     private JPanel handPanel;
     private JPanel drawPanel;
+    private JButton drawButton;
     private JPanel playPanel;
     private JList playerList;
     private JLabel news;
@@ -33,6 +34,7 @@ public class Playground extends UnicastRemoteObject implements View {
         this.frame = new JFrame("INFUNO");
         this.handPanel = new JPanel();
         this.drawPanel= new JPanel();
+        this.drawButton = newCardButton(new Card(TYPE.UNKNOWN, COLOR.UNKNOWN),false);
         this.playPanel = new JPanel();
         this.northPanel = new JPanel();
         this.westPanel = new JPanel();
@@ -69,7 +71,6 @@ public class Playground extends UnicastRemoteObject implements View {
         playPanel.setLayout(new GridLayout(1,2));
 
         //Nachziehstapel
-        JButton drawButton = newCardButton(new Card(TYPE.UNKNOWN, COLOR.UNKNOWN),false);
         drawButton.addActionListener(new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -255,6 +256,15 @@ public class Playground extends UnicastRemoteObject implements View {
         }
         colorDialog.add(panel);
         colorDialog.setVisible(true);
+    }
+
+    public void changeDrawPass(boolean draw){
+        if (draw) {
+            drawButton.setIcon(new ImageIcon(new Card(TYPE.UNKNOWN, COLOR.UNKNOWN).getPath()));
+        }else {
+        drawButton.setIcon(new ImageIcon("media/symbols/pass.png"));
+        }
+        frame.revalidate();
     }
 
     //Getter/Setter
