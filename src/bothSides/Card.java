@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 public class Card implements Serializable {
     private final static String path = "media/cards/";
-    private final static String type = ".jpg";
+    private final static String type = ".png";
     private TYPE cType;
     private COLOR color;
 
