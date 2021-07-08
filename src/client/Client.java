@@ -5,17 +5,16 @@ import bothSides.Player;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.*;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 
 public class Client {
-    public static Dimension frameDimension = new Dimension(1200,800);
+    public final Dimension frameDimension = new Dimension(1200,800);
 
     public static void main(String[] args){
         Client client = new Client();
@@ -26,7 +25,7 @@ public class Client {
         //Fenster einrichten
         JFrame startFrame = new JFrame();
         startFrame.setTitle("INFUNO");
-        startFrame.setSize(Client.frameDimension);
+        startFrame.setSize(frameDimension);
         startFrame.setLocationRelativeTo(null);
         startFrame.addWindowListener(new WindowAdapter() {
             @Override
@@ -37,12 +36,12 @@ public class Client {
 
         //Überschrift
         JLabel title = new JLabel("INFUNO-Warteraum");
-        title.setFont(new Font("Tahoma", 0, 50));
+        title.setFont(new Font("Arial", Font.BOLD, 50));
         title.setHorizontalAlignment(SwingConstants.CENTER);
         startFrame.add(title,BorderLayout.NORTH);
 
         //Formular
-        Font inputFont = new Font("Arial",0,20);
+        Font inputFont = new Font("Arial",Font.PLAIN,20);
         int width = 15;
 
         JPanel form = new JPanel();
@@ -52,20 +51,17 @@ public class Client {
         PlaceholderInput ipInput = new PlaceholderInput("127.0.0.1",width,inputFont);
         JLabel colon = new JLabel(":");
         colon.setFont(inputFont);
-        PlaceholderInput portInput = new PlaceholderInput("6780",width,inputFont);
+        PlaceholderInput portInput = new PlaceholderInput("6969",width,inputFont);
 
         //Name
         PlaceholderInput nameInput = new PlaceholderInput("Name",width,inputFont);
 
-        //BestätigungsButton
+        //Bestätigungsbutton
         JButton submit = new JButton("Bestätigen");
         submit.setPreferredSize(new Dimension(100,30));
-        submit.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                startFrame.dispose();
-                setConn(ipInput.getText(),Integer.parseInt(portInput.getText()),nameInput.getText());
-            }
+        submit.addActionListener(e -> {
+            startFrame.dispose();
+            setConn(ipInput.getText(),Integer.parseInt(portInput.getText()),nameInput.getText());
         });
 
         JLabel ipLabel = new JLabel("Verbindung:",JLabel.CENTER);
@@ -90,14 +86,13 @@ public class Client {
     }
 
     public void setConn(String ip, int port, String name){
-        Socket socket = null;
         try {
-            socket = new Socket(ip, port);
-            BufferedReader fromServer = new BufferedReader(new InputStreamReader(socket.getInputStream(), "utf-8"));
+            Socket socket = new Socket(ip, port);
+            BufferedReader fromServer = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
             String id = fromServer.readLine();
             socket.close();
             System.out.println("rmi://"+ip+"/player/"+id);
-            Playground playground = new Playground((Player) Naming.lookup("rmi://"+ip+"/player/"+id),name);
+            new Playground((Player) Naming.lookup("rmi://"+ip+"/player/"+id),name);
         } catch (IOException | NotBoundException e) {
             e.printStackTrace();
         }

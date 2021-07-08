@@ -8,23 +8,31 @@ import java.net.MalformedURLException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.nio.charset.StandardCharsets;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.util.*;
 
 public class Server{
-    //"Datenmodell"
-    private String serverLocation = "//localhost/player/";
-    private final int connPort = 6780; //ASCII für CP
+    private final String serverLocation = "//localhost/player/";
+    private final int connPort = 6969;
+    
     private boolean pending = true;
     private ServerSocket serversocket;
-    private ArrayList<Socket> sockets= new ArrayList<>();
-    private ArrayList<String> idList = new ArrayList<>();
-    private LinkedList<bothSides.Card> drawPile = new LinkedList<Card>();
-    private LinkedList<bothSides.Card> playPile = new LinkedList<Card>();
-    private LinkedList<PlayerImpl> players= new LinkedList<PlayerImpl>();
+    private ArrayList<Socket> sockets;
+    private ArrayList<String> idList;
+
+    //"Datenmodell"
+    private LinkedList<bothSides.Card> drawPile;
+    private LinkedList<bothSides.Card> playPile;
+    private LinkedList<PlayerImpl> players;
+    private LinkedList<ChatMessage> chatHistory;
     private Counter drawCount; //Adapterklasse, damit die Zahl global aktualisiert wird
 
+    public static void main(String[] args) throws IOException{
+        new Server();
+    }
+    
     //Thread der die Verbindung zu einem Client herstellt
     private class ConnectionThread extends Thread{
         private Socket socket;
@@ -34,10 +42,8 @@ public class Server{
         }
 
         public void run(){
-            BufferedWriter toClient;
-            String id;
-
             //ID erstellen
+            String id;
             do {
                 id = Integer.toString((int)(Math.random()*999999));
             }while (idList.contains(id));
@@ -45,7 +51,7 @@ public class Server{
 
             //Spieler hinzufügen
             try {
-                Player player = new PlayerImpl(drawPile,playPile,players,drawCount);
+                Player player = new PlayerImpl(drawPile,playPile,players,drawCount,chatHistory);
                 System.out.println(serverLocation+id);
                 Naming.rebind(serverLocation+id,player);
             } catch (RemoteException | MalformedURLException e) {
@@ -54,7 +60,7 @@ public class Server{
 
             //Client antworten
             try {
-                toClient = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(),"utf-8"));
+                BufferedWriter toClient = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));
                 toClient.write(id);
                 toClient.flush();
             } catch (IOException e) {
@@ -63,17 +69,18 @@ public class Server{
         }
     }
 
-    //Exceptions müssen noch behandelt werden
-    public static void main(String[] args) throws IOException{
-        Server server = new Server();
-        ServerFrame frame = new ServerFrame(server);
-        server.startSockets();
-    }
-
     public Server () throws IOException {
-        drawCount = new Counter();
-        drawCount.setCounter(0);
+        this.sockets = new ArrayList<>();
+        this.idList = new ArrayList<>();
+        this.drawPile = new LinkedList<>();
+        this.playPile = new LinkedList<>();
+        this.players = new LinkedList<>();
+        this.chatHistory = new LinkedList<>();
+        this.drawCount = new Counter();
+        this.drawCount.setCounter(0);
+        new ServerFrame(this);
         createDeck();
+        startSockets();
     }
 
     private void startSockets() throws IOException {
@@ -83,17 +90,18 @@ public class Server{
             try {
                 Socket socket = serversocket.accept();
                 sockets.add(socket);
-                Thread serviceThread = new ConnectionThread(socket);
-                serviceThread.start();
-            }catch (SocketException e){ }
+                new ConnectionThread(socket).start();
+            }catch (SocketException e){
+                //e.printStackTrace();
+            }
         }
     }
 
     void start() throws IOException, TurnException {
         pending = false;
+        serversocket.close();
         Collections.shuffle(players);
         players.getFirst().startPlayer();
-        serversocket.close();
         for(Socket s : sockets){
             s.close();
         }
@@ -102,6 +110,7 @@ public class Server{
 
     //Deck bilden
     private void createDeck(){
+        //Normale Karten
         for (int i=0;i<2;i++){
             for(TYPE t : TYPE.values()) {
                 if (TYPE.getExcluded().contains(t)){continue;}

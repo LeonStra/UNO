@@ -1,7 +1,6 @@
 package bothSides;
 
 import Exceptions.NotSuitableException;
-import Exceptions.TurnException;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -14,6 +13,8 @@ public interface Player extends Remote {
     void takeDrawCount() throws RemoteException;
     void play(Card card) throws RemoteException, NotSuitableException;
     void wish(COLOR color) throws RemoteException;
+    void sayUno() throws RemoteException;
+    void sendMessage(String message) throws RemoteException;
 
     //Getter/Setter
     void setView(View view) throws RemoteException;

@@ -10,6 +10,7 @@ import java.awt.event.*;
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.LinkedList;
 
 public class Playground extends UnicastRemoteObject implements View {
     private final Dimension cardDimension = new Dimension(101,151);
@@ -28,6 +29,7 @@ public class Playground extends UnicastRemoteObject implements View {
     private JButton drawButton;
     private JList playerList;
     private JPanel playPanel;
+    private JPanel chatHistory;
     private JLabel news;
 
     public Playground(Player player,String name) throws IOException{
@@ -38,9 +40,10 @@ public class Playground extends UnicastRemoteObject implements View {
         this.midPanel = new JPanel(new GridLayout(1,3));
         this.northPanel = new JPanel();
         this.westPanel = new JPanel();
-        this.eastPanel = new JPanel();
+        this.eastPanel = new JPanel(new BorderLayout());
         this.southPanel = new JPanel();
         this.playerList = new JList();
+        this.chatHistory = new JPanel();
         this.playPanel = new JPanel(new GridLayout());
 
         this.player.setView(this);
@@ -79,11 +82,13 @@ public class Playground extends UnicastRemoteObject implements View {
     private void init() throws RemoteException {
         //North Panel
         JButton chat = newImageButton("media/symbols/chat.png",new Dimension(64,64));
+        chat.addActionListener(e -> initChat());
         JButton settings = newImageButton("media/symbols/settings.png",new Dimension(64,64));
+        settings.addActionListener(e -> initSettings());
 
         //News
         news = new JLabel("Start",SwingConstants.CENTER);
-        news.setFont(new Font("Arial",0,50));
+        news.setFont(new Font("Arial",Font.PLAIN,50));
         news.setPreferredSize(new Dimension(frame.getWidth()-128-35,news.getPreferredSize().height));
 
         northPanel.add(news);
@@ -94,7 +99,7 @@ public class Playground extends UnicastRemoteObject implements View {
         //West Panel bzw. playerList
         playerList.setSelectionBackground(null);
         playerList.setFocusable(false);
-        playerList.setFont(new Font("Arial",0,25));
+        playerList.setFont(new Font("Arial",Font.PLAIN,25));
         playerList.setBorder(new EmptyBorder(0,10,0,0));
         playerList.setPreferredSize(new Dimension(sitesWidth,frame.getHeight()));
 
@@ -102,8 +107,11 @@ public class Playground extends UnicastRemoteObject implements View {
         westPanel.setPreferredSize(new Dimension(sitesWidth,frame.getHeight()));
 
         //East Panel bzw. Chat
+        eastPanel.setBorder(BorderFactory.createLineBorder(Color.black));
         eastPanel.setPreferredSize(new Dimension(sitesWidth,frame.getHeight()));
-        eastPanel.setBackground(Color.WHITE);
+        chatHistory.setPreferredSize(new Dimension(sitesWidth,frame.getHeight()));
+
+        initChat();
 
         //South Panel
         handPanel.setBorder(noBorder);
@@ -124,20 +132,52 @@ public class Playground extends UnicastRemoteObject implements View {
         southPanel.add(drawButton);
 
         //Center Panel
+        JPanel unoPanel = new JPanel();
         JButton uno = newImageButton("media/symbols/unoButton.png",new Dimension(100,100));
         uno.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                /*
-                * UNO-Button gedrückt
-                * */
+                try {
+                    player.sayUno();
+                } catch (RemoteException remoteException) {
+                    remoteException.printStackTrace();
+                }
             }
         });
+        unoPanel.add(uno);
         midPanel.add(new Label());
         midPanel.add(playPanel);
-        midPanel.add(uno);
+        midPanel.add(unoPanel);
 
         refresh();
+    }
+
+    private void initChat(){
+        eastPanel.removeAll();
+        JPanel panel = new JPanel();
+        PlaceholderInput chatInput = new PlaceholderInput("Nachricht",10,new Font("Arial",Font.ITALIC,20));
+        JButton send = new JButton("Send");
+        send.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    player.sendMessage(chatInput.getText());
+                } catch (RemoteException remoteException) {
+                    remoteException.printStackTrace();
+                }
+            }
+        });
+        panel.add(chatInput);
+        panel.add(send);
+        eastPanel.add(panel,BorderLayout.SOUTH);
+        eastPanel.add(chatHistory,BorderLayout.CENTER);
+        frame.revalidate();
+    }
+
+    private void initSettings(){
+        eastPanel.removeAll();
+        frame.repaint();
+        frame.revalidate();
     }
 
     //Einrichten einer Handkarte
@@ -269,6 +309,7 @@ public class Playground extends UnicastRemoteObject implements View {
     }
 
     //Pass Button aktivieren
+    @Override
     public void changeDrawPass(boolean draw){
         if (draw) {
             drawButton.setIcon(new ImageIcon(new Card(TYPE.UNKNOWN, COLOR.UNKNOWN).getPath()));
@@ -279,8 +320,54 @@ public class Playground extends UnicastRemoteObject implements View {
     }
 
     //Getter/Setter
+    @Override
     public void setNews(String txt){
         news.setText(txt);
+        frame.revalidate();
+    }
+
+    @Override
+    public void refreshChat(LinkedList<ChatMessage> messages){
+        chatHistory.removeAll();
+        JList list = new JList();
+        list.setFont(new Font("Arial",Font.BOLD,15));
+        //list.setPreferredSize(new Dimension(sitesWidth,list.getPreferredSize().height));
+        list.setPreferredSize(new Dimension(sitesWidth, frame.getHeight()));
+
+        LinkedList<String> chat = new LinkedList<>();
+        for (ChatMessage m : messages){
+            chat.add(m.getName());
+            chat.add(m.getMessage());
+        }
+        list.setListData(chat.toArray());
+
+        JPanel panel = new JPanel();
+        panel.setBorder(noBorder);
+        panel.add(list);
+        JScrollPane scrollPane = new JScrollPane(panel,ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setPreferredSize(new Dimension(chatHistory.getWidth(), eastPanel.getHeight()-100));
+        chatHistory.add(scrollPane);
+
+        /*for (ChatMessage m : messages){
+            JLabel name = new JLabel(m.getName());
+            name.setFont(new Font("Arial",Font.BOLD,15));
+            name.setForeground(Color.BLUE);
+            name.setBorder(new EmptyBorder(0,5,0,0));
+            //name.setPreferredSize(new Dimension(sitesWidth,name.getPreferredSize().height));
+            JLabel msg = new JLabel(m.getMessage());
+            msg.setFont(new Font("Arial",Font.BOLD,15));
+            msg.setForeground(Color.BLACK);
+            msg.setBorder(new EmptyBorder(0,10,0,0));
+            //msg.setPreferredSize(new Dimension(sitesWidth,msg.getPreferredSize().height));
+            panel.add(name);
+            panel.add(msg);
+        }
+        JScrollPane scrollPane = new JScrollPane(panel,ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setBorder(noBorder);
+        scrollPane.setPreferredSize(new Dimension(chatHistory.getWidth(), eastPanel.getHeight()-100));
+        chatHistory.add(scrollPane);*/
+
+        frame.repaint();
         frame.revalidate();
     }
 }

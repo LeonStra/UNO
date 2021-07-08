@@ -13,32 +13,36 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
     private boolean myTurn;
     private boolean increased;
     private boolean cardDrawn;
+    private boolean saidUno;
+    private Hand hand;
+    private LinkedList<ChatMessage> chatHistory;
     private Counter drawCount;
     private LinkedList<Card> drawPile;
-    private Hand hand;
     private LinkedList<Card> playPile;
     private LinkedList<PlayerImpl> players;
     private View view;
 
-    public interface Lambda{void action();}
-
     //Spieler initialisieren
-    public PlayerImpl(LinkedList<Card> drawPile, LinkedList<Card> playPile, LinkedList<PlayerImpl> players, Counter drawCount) throws RemoteException {
+    public PlayerImpl(LinkedList<Card> drawPile, LinkedList<Card> playPile, LinkedList<PlayerImpl> players, Counter drawCount, LinkedList<ChatMessage> chatHistory) throws RemoteException {
+        this.name = "Unbekannt";
         this.myTurn = false;
         this.increased = false;
-        this.drawCount = drawCount;
+        this.cardDrawn = false;
         this.hand = new Hand();
+        this.chatHistory = chatHistory;
+        this.drawCount = drawCount;
         this.drawPile = drawPile;
         this.playPile = playPile;
         this.players = players;
         this.players.add(this);
-        this.name = "Ubekannt";
     }
 
     //Spiel verlassen
     @Override
     public void leaveGame(){
-        players.remove(this); }
+        players.remove(this);
+        setNews("Spiel verlassen");
+    }
 
     //Karten hinzufügen
     private void giveCards(int amount) throws RemoteException {
@@ -67,14 +71,18 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
         myTurn = true;
     }
 
-    //Ablschuss des Zuges
+    //Abschluss des Zuges
     public void next() throws RemoteException {
         if (!increased && drawCount.getCounter() > 0){
             takeDrawCount();
         }
+        if (!saidUno && hand.size() == 1){
+            giveCards(2);
+        }
         cardDrawn = false;
         increased = false;
         myTurn = false;
+        saidUno = false;
         view.changeDrawPass(true);
         try {
             players.getFirst().itsMyTurn();
@@ -166,7 +174,29 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
         }
     }
 
+    public void refreshChat(){
+        try {
+            view.refreshChat(chatHistory);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
     //gewünschte Farbe
+
+    @Override
+    public void sayUno(){
+        saidUno = true;
+        players.forEach((p)->p.setNews(name+" hat UNO gerufen"));
+    }
+
+    @Override
+    public void sendMessage(String message) throws RemoteException {
+        chatHistory.addLast(new ChatMessage(this.getName(), message));
+        players.forEach((p)->p.refreshChat());
+    }
+
+
     @Override
     public void wish(COLOR c) throws RemoteException {
         if (myTurn && playPile.getFirst().getColor() == COLOR.MULTICOLORED){
