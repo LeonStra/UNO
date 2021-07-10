@@ -1,7 +1,7 @@
-Quellen:
-UNO-Karten: über Zweit/Drittanbieter -> https://commons.wikimedia.org/wiki/File:UNO_cards_deck.svg (Änderungen vorgenommen)
-UNO-Button: https://icons8.com/icons/set/uno--red (Änderungen vorgenommen)
+UNO-Karten: über Zweit/Drittanbieter -> https://commons.wikimedia.org/wiki/File:UNO_cards_deck.svg (verändert)
+UNO-Button: https://icons8.com/icons/set/uno--red (verändert)
 Settings-B.: https://www.flaticon.com/de/kostenloses-icon/die-einstellungen_97205?related_id=97205#
 Chat-B.: https://www.flaticon.com/de/kostenloses-icon/plaudern_561180?related_id=561180&origin=search#
 next-B.: https://game-icons.net/1x1/delapouite/player-next.html
 Farb-Kreise: Google-Version: https://emojiterra.com/
+JSwitchBox: oliholz - https://stackoverflow.com/a/7308818/11867805 (verändert)

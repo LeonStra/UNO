@@ -7,7 +7,7 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.IOException;
+import java.io.*;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.LinkedList;
@@ -16,6 +16,7 @@ public class Playground extends UnicastRemoteObject implements View {
     private final Dimension cardDimension = new Dimension(101,151);
     private final int sitesWidth = 300;
     private final EmptyBorder noBorder = new EmptyBorder(0,0,0,0);
+    private boolean dark;
     private Player player;
 
     //GUI
@@ -30,9 +31,11 @@ public class Playground extends UnicastRemoteObject implements View {
     private JList playerList;
     private JPanel playPanel;
     private JTextArea chatHistory;
+    private JPanel settingPanel;
     private JLabel news;
 
     public Playground(Player player,String name) throws IOException{
+        this.dark = false;
         this.player = player;
         this.frame = new JFrame("INFUNO");
         this.handPanel = new JPanel();
@@ -44,6 +47,7 @@ public class Playground extends UnicastRemoteObject implements View {
         this.southPanel = new JPanel();
         this.playerList = new JList();
         this.chatHistory = new JTextArea();
+        this.settingPanel = new JPanel();
         this.playPanel = new JPanel(new GridLayout());
 
         this.player.setView(this);
@@ -54,7 +58,6 @@ public class Playground extends UnicastRemoteObject implements View {
         frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
         frame.setLocationRelativeTo(null);
         frame.setLayout(new BorderLayout());
-        //frame.setUndecorated(true); //Ohne SchließButton etc.
         frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -109,6 +112,7 @@ public class Playground extends UnicastRemoteObject implements View {
         //East Panel bzw. Chat
         eastPanel.setBorder(BorderFactory.createLineBorder(Color.black));
         eastPanel.setPreferredSize(new Dimension(sitesWidth,frame.getHeight()));
+        eastPanel.setLayout(new BorderLayout());
         chatHistory.setEditable(false);
         chatHistory.setLineWrap(true);
 
@@ -155,7 +159,6 @@ public class Playground extends UnicastRemoteObject implements View {
 
     private void initChat(){
         eastPanel.removeAll();
-        eastPanel.setLayout(new BorderLayout());
         JPanel panel = new JPanel();
         PlaceholderInput chatInput = new PlaceholderInput("Nachricht",10,new Font("Arial",Font.ITALIC,20));
         JButton send = new JButton("Send");
@@ -174,14 +177,81 @@ public class Playground extends UnicastRemoteObject implements View {
         eastPanel.add(new JScrollPane(chatHistory),BorderLayout.CENTER);
         eastPanel.add(panel,BorderLayout.SOUTH);
         frame.revalidate();
+        frame.repaint();
     }
 
     private void initSettings(){
         eastPanel.removeAll();
-        frame.repaint();
+        settingPanel.removeAll();
+
+        JSwitchBox darkSwitch = settingToggle("Dark-Mode");
+        darkSwitch.addActionListener(e -> toggleDarkMode(darkSwitch.isSelected()));
+        darkSwitch.setSelected(!dark);
+        JSwitchBox sort = settingToggle("Hand sortieren");
+        sort.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e){
+                try {
+                    player.setSorting(sort.isSelected());
+                } catch (RemoteException remoteException) {
+                    remoteException.printStackTrace();
+                }
+            }
+        });
+        try {
+            sort.setSelected(!player.getSorting());
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+
+        JButton sources = new JButton("Quellen");
+        sources.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JDialog dialog = new JDialog(frame);
+                dialog.setSize(800,500);
+                dialog.setLocationRelativeTo(null);
+                dialog.setTitle("Quellen");
+                JTextArea txt = new JTextArea();
+                txt.setLineWrap(true);
+                txt.setEditable(false);
+                try {
+                    BufferedReader reader = new BufferedReader(new FileReader("media/Quellen.txt"));
+                    String line;
+                    while ((line = reader.readLine()) != null){
+                        txt.append(line + "\n");
+                    }
+                } catch (FileNotFoundException fileNotFoundException) {
+                    fileNotFoundException.printStackTrace();
+                } catch (IOException ioException) {
+                    ioException.printStackTrace();
+                }
+                dialog.add(txt);
+                dialog.setVisible(true);
+            }
+        });
+        eastPanel.add(settingPanel,BorderLayout.CENTER);
+        eastPanel.add(sources,BorderLayout.SOUTH);
         frame.revalidate();
+        frame.repaint();
+    }
+    private JSwitchBox settingToggle(String txt){
+        JPanel panel = new JPanel();
+        JLabel label = new JLabel(txt);
+        label.setFont(new Font("Arial",Font.BOLD,20));
+        panel.add(label);
+        JSwitchBox jSwitch = new JSwitchBox(10);
+        panel.add(jSwitch);
+        panel.setPreferredSize(new Dimension(sitesWidth-5,panel.getPreferredSize().height));
+        settingPanel.add(panel);
+        return jSwitch;
     }
 
+    private void toggleDarkMode(boolean b){
+        System.out.println(b);
+        dark = !dark;
+        /*Dark-Mode*/
+    }
     //Einrichten einer Handkarte
     private JButton newCardButton(Card card,boolean play){
         JButton b = newImageButton(card.getPath(),cardDimension);

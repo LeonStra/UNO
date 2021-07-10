@@ -233,10 +233,22 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
     public void setName(String name){
         this.name = name;
     }
+
+    @Override
+    public void setSorting(boolean b) throws RemoteException {
+
+    }
+
     @Override
     public ArrayList<Card> getHand() {
         return hand;
     }
+
+    @Override
+    public boolean getSorting() throws RemoteException {
+        return false;
+    }
+
     @Override
     public Card getTop(){
         try {
