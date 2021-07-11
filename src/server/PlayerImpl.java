@@ -14,6 +14,8 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
     protected boolean increased;
     protected boolean cardDrawn;
     protected boolean saidUno;
+    protected boolean sorting;
+    protected boolean alreadyPlayed;
     protected Hand hand;
     protected LinkedList<ChatMessage> chatHistory;
     protected Counter drawCount;
@@ -28,13 +30,16 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
         this.myTurn = false;
         this.increased = false;
         this.cardDrawn = false;
+        this.saidUno = false;
+        this.sorting = false;
+        this.alreadyPlayed = false;
         this.hand = new Hand();
         this.chatHistory = chatHistory;
         this.drawCount = drawCount;
         this.drawPile = drawPile;
         this.playPile = playPile;
         this.players = players;
-        this.players.add(this);
+        //this.players.add(this);
     }
 
     //Spiel verlassen
@@ -111,7 +116,7 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
 
     //Karte spielen
     @Override
-    public void play(Card card) throws RemoteException, NotSuitableException {
+    public void play(Card card) throws RemoteException, NotSuitableException, TurnException {
         boolean wait = false;
 
         if (playPile.getFirst().suitable(card) && myTurn){
@@ -148,17 +153,18 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
             }
             hand.remove(card);
             playPile.addFirst(card);
+            alreadyPlayed = true;
             if (!wait) {
                 next();
             }
             refreshView();
-        } else {throw new NotSuitableException();}
+        } else {if (!myTurn){throw new TurnException();}throw new NotSuitableException();}
     }
 
     //Kommunikation mit view
     //Ansicht erneuern
     public void refreshView(){
-        Collections.sort(hand);
+        if (sorting){Collections.sort(hand);}
         try {
             view.refresh();
         } catch (RemoteException e) {
@@ -182,33 +188,21 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
         }
     }
 
-    //gewünschte Farbe
-
+    //Uno-Button gedrückt
     @Override
     public void sayUno(){
         saidUno = true;
         players.forEach((p)->p.setNews(name+" hat UNO gerufen"));
     }
 
+    //Senden-Button
     @Override
     public void sendMessage(String message) throws RemoteException {
         chatHistory.addLast(new ChatMessage(this.getName(), message));
         players.forEach((p)->p.refreshChat());
     }
 
-
-    @Override
-    public void wish(COLOR c) throws RemoteException {
-        if (myTurn && playPile.getFirst().getColor() == COLOR.MULTICOLORED){
-            TYPE t = playPile.getFirst().getcType();
-            playPile.removeFirst();
-            playPile.addFirst(new Card(t,c));
-            refreshView();
-            next();
-        }
-    }
-
-    //Karte ziehen
+    //Karte ziehen-Button
     @Override
     public void drawCard() throws RemoteException{
         if (myTurn && !cardDrawn) {
@@ -220,35 +214,46 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
         }
     }
 
+    //Farbe nach Wunschkarte gewählt
+    @Override
+    public void wish(COLOR c) throws RemoteException {
+        if (myTurn && playPile.getFirst().getColor() == COLOR.MULTICOLORED){
+            TYPE t = playPile.getFirst().getcType();
+            playPile.removeFirst();
+            playPile.addFirst(new Card(t,c));
+            refreshView();
+            next();
+        }
+    }
+
     //Getter/Setter
     @Override
     public void setView(View view) throws RemoteException {
         if (this.view == null) {
             this.view = view;
             giveCards(7);
-            hand.add(new Card(TYPE.DRAWTWO,COLOR.GREEN));
         }
+        hand.add(new Card(TYPE.EIGHT,COLOR.YELLOW));
+        hand.add(new Card(TYPE.EIGHT,COLOR.YELLOW));
+        hand.add(new Card(TYPE.WILD,COLOR.MULTICOLORED));
     }
     @Override
     public void setName(String name){
         this.name = name;
     }
-
     @Override
     public void setSorting(boolean b) throws RemoteException {
-
+        sorting = b;
     }
 
     @Override
     public ArrayList<Card> getHand() {
         return hand;
     }
-
     @Override
     public boolean getSorting() throws RemoteException {
         return false;
     }
-
     @Override
     public Card getTop(){
         try {

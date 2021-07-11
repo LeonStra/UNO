@@ -4,19 +4,18 @@ import Exceptions.*;
 import bothSides.*;
 
 import java.rmi.RemoteException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 
 public class ExtPlayerImpl extends PlayerImpl implements ExtPlayer{
-    protected LinkedList<ExtPlayerImpl> players;
     protected boolean showFour;
     protected boolean throwaway;
+    protected Card fourCard;
 
     public ExtPlayerImpl(LinkedList<Card> drawPile, LinkedList<Card> playPile, LinkedList<PlayerImpl> players, Counter drawCount, LinkedList<ChatMessage> chatHistory) throws RemoteException {
         super(drawPile, playPile, players, drawCount, chatHistory);
-        this.players = new LinkedList<>();
-        players.forEach(p -> this.players.add((ExtPlayerImpl)p));
+        this.throwaway = false;
+        this.showFour = false;
     }
 
     @Override
@@ -27,16 +26,18 @@ public class ExtPlayerImpl extends PlayerImpl implements ExtPlayer{
             hand.remove(card);
             if (players.getFirst().getHand().size() == hand.size()){
                 throwaway = false;
+                view.setNews("Mehr darf nicht abgelegt werden");
                 next();
             }
         } else if (showFour){
-            /*globales Objekt*/
+            fourCard = card;
             showFour = false;
             next();
         }else if (playPile.getFirst().suitable(card) && myTurn || playPile.getFirst().equals(card)){
             System.out.println(playPile.getFirst().getColor());
+            //Reinwerfen
             if (!myTurn){
-                players.getLast().breakTurn();
+                ((ExtPlayerImpl)players.getLast()).breakTurn();
                 while (players.getLast() != this){
                     players.addLast(players.getFirst());
                     players.removeFirst();
@@ -49,7 +50,9 @@ public class ExtPlayerImpl extends PlayerImpl implements ExtPlayer{
             switch (card.getcType()){
                 case ZERO:
                     Hand h = players.getLast().hand;
-                    for (ExtPlayerImpl p : players){
+                    System.out.println(players.size());
+                    for (PlayerImpl p : players){
+                        System.out.println(p.getName());
                         if (players.indexOf(p) != 0) {
                             p.hand = players.get(players.indexOf(p) - 1).hand;
                         }
@@ -57,12 +60,12 @@ public class ExtPlayerImpl extends PlayerImpl implements ExtPlayer{
                     players.getFirst().hand = h;
                     break;
                 case ONE:
-                    if (players.getFirst().getHand().size() > hand.size()-1) {
-                        view.setNews("Lege Kartem ab");
+                    if (players.getFirst().getHand().size() < hand.size()) {
+                        view.setNews("Lege"+ players.getFirst().getHand().size() +"Karten ab");
                         throwaway = true;
                         wait = true;
                     } else{
-                        giveCards(players.getFirst().getHand().size()-hand.size()-1);
+                        giveCards(players.getFirst().getHand().size()-hand.size());
                     }
                     break;
                 case TWO:
@@ -75,37 +78,48 @@ public class ExtPlayerImpl extends PlayerImpl implements ExtPlayer{
                     break;
                 case FOUR:
                     players.forEach(p -> {
-                        p.showFour = true;
+                        ((ExtPlayerImpl) p).showFour = true;
                         p.setNews("Zeige eine Karte");
                     });
                     wait = true;
                     break;
                 case FIVE:
+                    playPile.removeAll(playPile);
                     playPile.add(new Card(TYPE.UNKNOWN,COLOR.MULTICOLORED));
+                    players.getFirst().setNews("Lege was du willst");
                     break;
                 case SIX:
 
                     break;
                 case SEVEN:
-                    LinkedList<Card> list = new LinkedList<>();
-                    for (ExtPlayerImpl p : players){
-                        list.addAll(p.getHand());
+                    //Zusammenlegen
+                    LinkedList<Card> cards = new LinkedList<>();
+                    for (PlayerImpl p : players){
+                        cards.addAll(p.getHand());
                         p.hand.removeAll(p.getHand());
                     }
-                    Collections.shuffle(list);
-                    while (list.size() > 0){
-                        for (ExtPlayerImpl p : players){
-                            if (list.size() <= 0){break;}
-                            p.hand.add(list.getFirst());
-                            list.removeFirst();
+                    Collections.shuffle(cards);
+
+                    //Neu verteilen
+                    LinkedList<PlayerImpl> playersCopy = (LinkedList<PlayerImpl>) players.clone();
+                    playersCopy.addFirst(playersCopy.getLast());
+                    playersCopy.removeLast();
+                    while (cards.size() > 0){
+                        for (PlayerImpl p : playersCopy){
+                            if (cards.size() <= 0){break;}
+                            p.hand.add(cards.getFirst());
+                            cards.removeFirst();
                         }
                     }
                     break;
                 case EIGHT:
-
+                    view.setNews("BUMMMMS");
+                    view.bumms();
+                    wait = true;
                     break;
                 case NINE:
-
+                    view.toggleFastButton(true);
+                    wait = true;
                     break;
                 case DRAWTWO:
                     drawCount.addCounter(2);
@@ -137,6 +151,7 @@ public class ExtPlayerImpl extends PlayerImpl implements ExtPlayer{
                     view.selectColor();
                     break;
             }
+            alreadyPlayed = true;
             if (!wait) {
                 next();
             }
@@ -166,15 +181,21 @@ public class ExtPlayerImpl extends PlayerImpl implements ExtPlayer{
     @Override
     public void wishCard(Card card, String playerName) throws RemoteException {
         players.forEach(p -> {
-            if(p.getName() == playerName && p.hand.contains(card)){
+            if(p.getName().equals(playerName) && p.hand.contains(card)){
                 p.hand.remove(card);
                 this.hand.add(card);
             }
         });
     }
 
-    //Getter/Setter
-    public void setFourList(ArrayList fourList){
-
+    @Override
+    public void bummsReturn(int i) throws RemoteException {
+        if (myTurn && playPile.getFirst().getcType().equals(TYPE.EIGHT) && alreadyPlayed){
+            int count = playPile.stream().mapToInt(c -> c.getcType().equals(TYPE.EIGHT) ? 1 : 0).sum();
+            System.out.println(count);
+            giveCards(count == i?0:count);
+            view.setNews("Es waren: " + count + " 8er");
+            next();
+        }
     }
 }

@@ -1,6 +1,7 @@
 package client;
 
 import Exceptions.NotSuitableException;
+import Exceptions.TurnException;
 import bothSides.*;
 
 import javax.swing.*;
@@ -37,6 +38,7 @@ public class Playground extends UnicastRemoteObject implements View {
     private JPanel settingPanel;
     private JLabel news;
 
+    //Initialisierung des Fensters
     public Playground(Player player,String name) throws IOException{
         this.player = player;
         this.dialogs = new ArrayList<>();
@@ -73,7 +75,6 @@ public class Playground extends UnicastRemoteObject implements View {
                 System.exit(0);
             }
         });
-        //toggleDarkMode(false);
 
         //Zusammensetzen
         southPanel.add(handPanel);
@@ -86,6 +87,7 @@ public class Playground extends UnicastRemoteObject implements View {
         init();
     }
 
+    //Komponenten initialisieren
     private void init() throws RemoteException {
         //North Panel
         int northB = 64;
@@ -166,6 +168,7 @@ public class Playground extends UnicastRemoteObject implements View {
         refresh();
     }
 
+    //Chat initialisieren
     private void initChat(){
         eastPanel.removeAll();
         JPanel panel = new JPanel();
@@ -189,6 +192,7 @@ public class Playground extends UnicastRemoteObject implements View {
         frame.repaint();
     }
 
+    //Einstellungen initialisieren
     private void initSettings(){
         eastPanel.removeAll();
         settingPanel.removeAll();
@@ -233,10 +237,8 @@ public class Playground extends UnicastRemoteObject implements View {
                     while ((line = reader.readLine()) != null){
                         txt.append(line + "\n");
                     }
-                } catch (FileNotFoundException fileNotFoundException) {
+                } catch (IOException fileNotFoundException) {
                     fileNotFoundException.printStackTrace();
-                } catch (IOException ioException) {
-                    ioException.printStackTrace();
                 }
                 dialog.add(txt);
                 dialog.setVisible(true);
@@ -248,6 +250,7 @@ public class Playground extends UnicastRemoteObject implements View {
         frame.repaint();
     }
 
+    //Einstellungsmöglichkeit einrichten
     private JSwitchBox createSettingToggle(String txt){
         JPanel panel = new JPanel();
         JLabel label = new JLabel(txt);
@@ -260,6 +263,7 @@ public class Playground extends UnicastRemoteObject implements View {
         return jSwitch;
     }
 
+    //Dark/Light-Mode Wechsel
     private void toggleDarkMode(boolean b){
         System.out.println(b);
         dark = b;
@@ -287,14 +291,11 @@ public class Playground extends UnicastRemoteObject implements View {
         } catch (UnsupportedLookAndFeelException exc) {
             System.err.println("Nimbus: Unsupported Look and feel!");
 
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
             e.printStackTrace();
         }
     }
+
     //Einrichten einer Handkarte
     private JButton newCardButton(Card card,boolean play){
         JButton b = newImageButton(card.getPath(),cardDimension);
@@ -308,7 +309,8 @@ public class Playground extends UnicastRemoteObject implements View {
                         setNews("Verbindungsfehler");
                     } catch (NotSuitableException nse) {
                         setNews("Passt nicht");
-                        //Fehler anzeigen
+                    } catch (TurnException te) {
+                        setNews("Nicht dein Zug");
                     }
                 }
             });
@@ -316,6 +318,7 @@ public class Playground extends UnicastRemoteObject implements View {
         return b;
     }
 
+    //Einrichten eines Bild-Buttons
     private JButton newImageButton(String path,Dimension dimension){
         JButton b = new JButton();
         b.setBorderPainted(false);
@@ -355,6 +358,7 @@ public class Playground extends UnicastRemoteObject implements View {
         frame.repaint();
     }
 
+    //Dialog-Befehle
     @Override
     public void drawOrCounter(int drawCount){
         SwingUtilities.invokeLater(() -> drawDialog(drawCount));
@@ -367,7 +371,7 @@ public class Playground extends UnicastRemoteObject implements View {
 
     @Override
     public void takeFromPlayPile() throws RemoteException {
-
+        SwingUtilities.invokeLater(() -> takeFromPlayPileDialog());
     }
 
     @Override
@@ -381,12 +385,23 @@ public class Playground extends UnicastRemoteObject implements View {
         });
     }
 
-    //Dialogs
+    @Override
+    public void bumms() throws RemoteException {
+        SwingUtilities.invokeLater(() -> bummsDialog());
+    }
+
+    @Override
+    public void toggleFastButton(boolean b) throws RemoteException {
+
+    }
+
+    //Dialog-Ausführung
     //Alle Dialoge schließen
     public void closeDialogs(){
         for (JDialog d : dialogs){
             d.dispose();
         }
+        dialogs.removeAll(dialogs);
     }
 
     //Dialog zur Entscheidung, ob man zieht
@@ -449,6 +464,11 @@ public class Playground extends UnicastRemoteObject implements View {
         colorDialog.setVisible(true);
     }
 
+    //2
+    private void takeFromPlayPileDialog(){
+        UnoDialog dialog = new UnoDialog(frame,"Wähle eine Karte","Wähle deine Karte");
+    }
+
     //Dialog zum Karte wünschen
     private void wishCardDialog() throws RemoteException {
         UnoDialog wishDialog = new UnoDialog(frame,"Karte wünschen","Wünsche dir eine Karte");
@@ -471,6 +491,30 @@ public class Playground extends UnicastRemoteObject implements View {
         wishDialog.add(colors);
         wishDialog.add(submit);
         
+    }
+
+    private void bummsDialog(){
+        UnoDialog dialog = new UnoDialog(frame,"BUMMMMMMMMS","Wie viele 8er sind im Ablagestapel?");
+        JSlider slider= new JSlider(JSlider.HORIZONTAL,1,8,1);
+        slider.setMinorTickSpacing(1);
+        slider.setMajorTickSpacing(2);
+        slider.setPaintTicks(true);
+        slider.setPaintLabels(true);
+        JButton submit = new JButton("OK");
+        submit.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                dialog.dispose();
+                try {
+                    ((ExtPlayer)player).bummsReturn(slider.getValue());
+                } catch (RemoteException remoteException) {
+                    remoteException.printStackTrace();
+                }
+            }
+        });
+        dialog.add(slider,BorderLayout.CENTER);
+        dialog.add(submit,BorderLayout.SOUTH);
+        dialog.setVisible(true);
     }
 
     //Pass Button aktivieren

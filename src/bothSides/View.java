@@ -15,6 +15,8 @@ public interface View extends Remote {
     void selectColor() throws RemoteException;
     void takeFromPlayPile() throws RemoteException;
     void wishCard() throws RemoteException;
+    void bumms() throws RemoteException;
+    void toggleFastButton(boolean b) throws RemoteException;
 
     //Changes
     void setNews(String txt) throws RemoteException;

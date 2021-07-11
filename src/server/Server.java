@@ -1,6 +1,6 @@
 package server;
 
-import Exceptions.TurnException;
+import Exceptions.*;
 import bothSides.*;
 
 import java.io.*;
@@ -28,7 +28,6 @@ public class Server{
     private LinkedList<bothSides.Card> playPile;
     private LinkedList<PlayerImpl> players;
     private LinkedList<ChatMessage> chatHistory;
-    private ArrayList<TYPE> fourList;
     private Counter drawCount; //Adapterklasse, damit die Zahl global aktualisiert wird
 
     public static void main(String[] args) throws IOException{
@@ -53,8 +52,8 @@ public class Server{
 
             //Spieler hinzufügen
             try {
-                Player player = new ExtPlayerImpl(drawPile,playPile,players,drawCount,chatHistory);
-                if (extended){((ExtPlayer)player).setFourList(fourList);}
+                PlayerImpl player = extended?new ExtPlayerImpl(drawPile,playPile,players,drawCount,chatHistory) : new PlayerImpl(drawPile,playPile,players,drawCount,chatHistory);
+                players.add(player);
                 System.out.println(serverLocation+id);
                 Naming.rebind(serverLocation+id,player);
             } catch (RemoteException | MalformedURLException e) {
