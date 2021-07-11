@@ -5,11 +5,13 @@ import bothSides.*;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.plaf.nimbus.NimbusLookAndFeel;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 import java.util.LinkedList;
 
 public class Playground extends UnicastRemoteObject implements View {
@@ -18,6 +20,7 @@ public class Playground extends UnicastRemoteObject implements View {
     private final EmptyBorder noBorder = new EmptyBorder(0,0,0,0);
     private boolean dark;
     private Player player;
+    private ArrayList<JDialog> dialogs;
 
     //GUI
     private JFrame frame;
@@ -35,8 +38,8 @@ public class Playground extends UnicastRemoteObject implements View {
     private JLabel news;
 
     public Playground(Player player,String name) throws IOException{
-        this.dark = false;
         this.player = player;
+        this.dialogs = new ArrayList<>();
         this.frame = new JFrame("INFUNO");
         this.handPanel = new JPanel();
         this.drawButton = newCardButton(new Card(TYPE.UNKNOWN, COLOR.UNKNOWN),false);
@@ -70,6 +73,7 @@ public class Playground extends UnicastRemoteObject implements View {
                 System.exit(0);
             }
         });
+        //toggleDarkMode(false);
 
         //Zusammensetzen
         southPanel.add(handPanel);
@@ -84,16 +88,21 @@ public class Playground extends UnicastRemoteObject implements View {
 
     private void init() throws RemoteException {
         //North Panel
-        JButton chat = newImageButton("media/symbols/chat.png",new Dimension(64,64));
+        int northB = 64;
+        JButton chat = newImageButton("media/symbols/chat.png",new Dimension(northB,northB));
         chat.addActionListener(e -> initChat());
-        JButton settings = newImageButton("media/symbols/settings.png",new Dimension(64,64));
+        JButton settings = newImageButton("media/symbols/settings.png",new Dimension(northB,northB));
         settings.addActionListener(e -> initSettings());
 
         //News
         news = new JLabel("Start",SwingConstants.CENTER);
         news.setFont(new Font("Arial",Font.PLAIN,50));
-        news.setPreferredSize(new Dimension(frame.getWidth()-128-35,news.getPreferredSize().height));
+        news.setPreferredSize(new Dimension(frame.getWidth()-(northB*4)-50,news.getPreferredSize().height));
 
+        JPanel placeholder = new JPanel();
+        placeholder.setPreferredSize(new Dimension(2*northB,northB));
+
+        northPanel.add(placeholder);
         northPanel.add(news);
         northPanel.add(chat);
         northPanel.add(settings);
@@ -150,7 +159,7 @@ public class Playground extends UnicastRemoteObject implements View {
             }
         });
         unoPanel.add(uno);
-        midPanel.add(new Label());
+        midPanel.add(new JPanel());
         midPanel.add(playPanel);
         midPanel.add(unoPanel);
 
@@ -184,10 +193,13 @@ public class Playground extends UnicastRemoteObject implements View {
         eastPanel.removeAll();
         settingPanel.removeAll();
 
-        JSwitchBox darkSwitch = settingToggle("Dark-Mode");
-        darkSwitch.addActionListener(e -> toggleDarkMode(darkSwitch.isSelected()));
-        darkSwitch.setSelected(!dark);
-        JSwitchBox sort = settingToggle("Hand sortieren");
+        JSwitchBox darkSwitch = createSettingToggle("Dark-Mode");
+        darkSwitch.addActionListener(e -> {
+            System.out.println("sInit: "+darkSwitch.isSelected());
+            toggleDarkMode(darkSwitch.isSelected());
+        });
+        darkSwitch.setSelected(dark);
+                JSwitchBox sort = createSettingToggle("Hand sortieren");
         sort.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e){
@@ -235,7 +247,8 @@ public class Playground extends UnicastRemoteObject implements View {
         frame.revalidate();
         frame.repaint();
     }
-    private JSwitchBox settingToggle(String txt){
+
+    private JSwitchBox createSettingToggle(String txt){
         JPanel panel = new JPanel();
         JLabel label = new JLabel(txt);
         label.setFont(new Font("Arial",Font.BOLD,20));
@@ -249,8 +262,38 @@ public class Playground extends UnicastRemoteObject implements View {
 
     private void toggleDarkMode(boolean b){
         System.out.println(b);
-        dark = !dark;
-        /*Dark-Mode*/
+        dark = b;
+        try {
+            if (dark){
+                UIManager.setLookAndFeel(new NimbusLookAndFeel());
+                UIManager.put("control", new Color(128, 128, 128));
+                UIManager.put("info", new Color(128, 128, 128));
+                UIManager.put("nimbusBase", new Color(18, 30, 49));
+                UIManager.put("nimbusAlertYellow", new Color(248, 187, 0));
+                UIManager.put("nimbusDisabledText", new Color(128, 128, 128));
+                UIManager.put("nimbusFocus", new Color(115, 164, 209));
+                UIManager.put("nimbusGreen", new Color(176, 179, 50));
+                UIManager.put("nimbusInfoBlue", new Color(66, 139, 221));
+                UIManager.put("nimbusLightBackground", new Color(18, 30, 49));
+                UIManager.put("nimbusOrange", new Color(191, 98, 4));
+                UIManager.put("nimbusRed", new Color(169, 46, 34));
+                UIManager.put("nimbusSelectedText", new Color(255, 255, 255));
+                UIManager.put("nimbusSelectionBackground", new Color(104, 93, 156));
+                UIManager.put("text", new Color(230, 230, 230));
+            } else{
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            }
+            SwingUtilities.updateComponentTreeUI(frame);
+        } catch (UnsupportedLookAndFeelException exc) {
+            System.err.println("Nimbus: Unsupported Look and feel!");
+
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
     }
     //Einrichten einer Handkarte
     private JButton newCardButton(Card card,boolean play){
@@ -322,11 +365,34 @@ public class Playground extends UnicastRemoteObject implements View {
         SwingUtilities.invokeLater(() -> colorDialog());
     }
 
+    @Override
+    public void takeFromPlayPile() throws RemoteException {
+
+    }
+
+    @Override
+    public void wishCard() throws RemoteException{
+        SwingUtilities.invokeLater(()-> {
+            try {
+                wishCardDialog();
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
     //Dialogs
+    //Alle Dialoge schließen
+    public void closeDialogs(){
+        for (JDialog d : dialogs){
+            d.dispose();
+        }
+    }
+
     //Dialog zur Entscheidung, ob man zieht
     private void drawDialog(int drawCount){
         UnoDialog drawDialog = new UnoDialog(frame,"Ziehen", "Kartenumfang: " + drawCount);
-
+        dialogs.add(drawDialog);
         JPanel buttonPanel = new JPanel();
         JButton draw = new JButton("Ziehen");
         draw.addActionListener(new ActionListener() {
@@ -334,6 +400,7 @@ public class Playground extends UnicastRemoteObject implements View {
             public void actionPerformed(ActionEvent e) {
                 try {
                     drawDialog.dispose();
+                    dialogs.remove(drawDialog);
                     player.takeDrawCount();
                 } catch (RemoteException remoteException) {
                     remoteException.printStackTrace();
@@ -357,6 +424,7 @@ public class Playground extends UnicastRemoteObject implements View {
     //Dialog zum Farbe wünschen
     private void colorDialog(){
         UnoDialog colorDialog = new UnoDialog(frame,"Wünschen", "Wähle deine Wunsch-Farbe",new Dimension(800,200));
+        dialogs.add(colorDialog);
         JPanel panel = new JPanel();
 
         for(COLOR c : COLOR.values()) {
@@ -369,6 +437,7 @@ public class Playground extends UnicastRemoteObject implements View {
                 public void actionPerformed(ActionEvent e) {
                     try {
                         colorDialog.dispose();
+                        dialogs.remove(colorDialog);
                         player.wish(c);
                     } catch (RemoteException remoteException) {
                         remoteException.printStackTrace();
@@ -378,6 +447,30 @@ public class Playground extends UnicastRemoteObject implements View {
         }
         colorDialog.add(panel);
         colorDialog.setVisible(true);
+    }
+
+    //Dialog zum Karte wünschen
+    private void wishCardDialog() throws RemoteException {
+        UnoDialog wishDialog = new UnoDialog(frame,"Karte wünschen","Wünsche dir eine Karte");
+        JComboBox players = new JComboBox(player.getNameList().toArray());
+        JComboBox types = new JComboBox(TYPE.values());
+        JComboBox colors = new JComboBox(COLOR.values());
+        JButton submit = new JButton("Ok");
+        submit.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    ((ExtPlayer)(player)).wishCard(new Card(TYPE.WILDFOUR,COLOR.MULTICOLORED),player.getNameList().get(players.getSelectedIndex()));
+                } catch (RemoteException remoteException) {
+                    remoteException.printStackTrace();
+                }
+            }
+        });
+        wishDialog.add(players);
+        wishDialog.add(types);
+        wishDialog.add(colors);
+        wishDialog.add(submit);
+        
     }
 
     //Pass Button aktivieren

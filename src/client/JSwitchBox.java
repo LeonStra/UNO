@@ -14,20 +14,22 @@ public class JSwitchBox extends JToggleButton {
     private Color red = new Color(160,130,130);
     private Color green = new Color(130,160,130);
 
-    private int globalWitdh = 0;
+    private int globalWidth = 0;
     private Dimension thumbBounds;
 
 
-    public JSwitchBox(int witdh) {
-        thumbBounds  = new Dimension(2*witdh,20);
-        globalWitdh =  4*witdh;
+    public JSwitchBox(int width) {
+        thumbBounds  = new Dimension(2*width,20);
+        globalWidth =  4*width;
         setModel(new DefaultButtonModel());
-        setSelected(true);
+        setSelected(false);
         addMouseListener(new MouseAdapter(){
             @Override
             public void mouseReleased( MouseEvent e ) {
                 if(new Rectangle(getPreferredSize()).contains(e.getPoint())){
+                    System.out.println("Switch1: "+isSelected());
                     setSelected(!isSelected());
+                    System.out.println("Switch2: "+isSelected());
                 }
             }
         });
@@ -35,7 +37,7 @@ public class JSwitchBox extends JToggleButton {
 
     @Override
     public Dimension getPreferredSize(){
-        return new Dimension(globalWitdh, thumbBounds.height);
+        return new Dimension(globalWidth, thumbBounds.height);
     }
 
     @Override
@@ -54,7 +56,7 @@ public class JSwitchBox extends JToggleButton {
         int w = thumbBounds.width;
         int h = thumbBounds.height;
 
-        if(!isSelected()) {
+        if(isSelected()) {
             setBackground(green);
             x = thumbBounds.width;
         } else{

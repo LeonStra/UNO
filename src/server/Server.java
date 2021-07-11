@@ -16,7 +16,8 @@ import java.util.*;
 public class Server{
     private final String serverLocation = "//localhost/player/";
     private final int connPort = 6969;
-    
+
+    private boolean extended = true;
     private boolean pending = true;
     private ServerSocket serversocket;
     private ArrayList<Socket> sockets;
@@ -27,6 +28,7 @@ public class Server{
     private LinkedList<bothSides.Card> playPile;
     private LinkedList<PlayerImpl> players;
     private LinkedList<ChatMessage> chatHistory;
+    private ArrayList<TYPE> fourList;
     private Counter drawCount; //Adapterklasse, damit die Zahl global aktualisiert wird
 
     public static void main(String[] args) throws IOException{
@@ -51,7 +53,8 @@ public class Server{
 
             //Spieler hinzufügen
             try {
-                Player player = new PlayerImpl(drawPile,playPile,players,drawCount,chatHistory);
+                Player player = new ExtPlayerImpl(drawPile,playPile,players,drawCount,chatHistory);
+                if (extended){((ExtPlayer)player).setFourList(fourList);}
                 System.out.println(serverLocation+id);
                 Naming.rebind(serverLocation+id,player);
             } catch (RemoteException | MalformedURLException e) {

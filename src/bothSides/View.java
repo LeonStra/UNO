@@ -10,8 +10,11 @@ public interface View extends Remote {
     void refreshChat(LinkedList<ChatMessage> messages) throws RemoteException;
 
     //Dialogs
+    void closeDialogs() throws RemoteException;
     void drawOrCounter(int drawCount) throws RemoteException;
     void selectColor() throws RemoteException;
+    void takeFromPlayPile() throws RemoteException;
+    void wishCard() throws RemoteException;
 
     //Changes
     void setNews(String txt) throws RemoteException;

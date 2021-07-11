@@ -9,18 +9,18 @@ import java.util.*;
 
 
 public class PlayerImpl extends UnicastRemoteObject implements Player {
-    private String name;
-    private boolean myTurn;
-    private boolean increased;
-    private boolean cardDrawn;
-    private boolean saidUno;
-    private Hand hand;
-    private LinkedList<ChatMessage> chatHistory;
-    private Counter drawCount;
-    private LinkedList<Card> drawPile;
-    private LinkedList<Card> playPile;
-    private LinkedList<PlayerImpl> players;
-    private View view;
+    protected String name;
+    protected boolean myTurn;
+    protected boolean increased;
+    protected boolean cardDrawn;
+    protected boolean saidUno;
+    protected Hand hand;
+    protected LinkedList<ChatMessage> chatHistory;
+    protected Counter drawCount;
+    protected LinkedList<Card> drawPile;
+    protected LinkedList<Card> playPile;
+    protected LinkedList<PlayerImpl> players;
+    protected View view;
 
     //Spieler initialisieren
     public PlayerImpl(LinkedList<Card> drawPile, LinkedList<Card> playPile, LinkedList<PlayerImpl> players, Counter drawCount, LinkedList<ChatMessage> chatHistory) throws RemoteException {
@@ -45,7 +45,7 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
     }
 
     //Karten hinzufügen
-    private void giveCards(int amount) throws RemoteException {
+    protected void giveCards(int amount) throws RemoteException {
         //Karten ziehen
         for(int i=0; i<amount ;i++) {
             hand.add(drawPile.getFirst());
@@ -94,7 +94,6 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
     //Beginn des Zuges
     public void itsMyTurn() throws RemoteException, TurnException {
         if (!players.getFirst().equals(this)){throw new TurnException();}
-        System.out.println(name+drawCount);
         players.removeFirst();
         players.addLast(this);
         myTurn = true;
@@ -159,6 +158,7 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
     //Kommunikation mit view
     //Ansicht erneuern
     public void refreshView(){
+        Collections.sort(hand);
         try {
             view.refresh();
         } catch (RemoteException e) {

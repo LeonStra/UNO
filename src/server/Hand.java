@@ -4,8 +4,19 @@ import bothSides.Card;
 import bothSides.TYPE;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class Hand extends ArrayList<Card>{
+
+    public Hand(List<Card> subList) {
+        for (Card c : subList){
+            add(c);
+        }
+    }
+
+    public Hand(){
+        super();
+    }
 
     public boolean remove(Card card) {
         for (Card c : this){

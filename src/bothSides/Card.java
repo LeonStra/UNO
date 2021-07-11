@@ -2,7 +2,7 @@ package bothSides;
 
 import java.io.Serializable;
 
-public class Card implements Serializable {
+public class Card implements Serializable, Comparable<Card> {
     private final static String path = "media/cards/";
     private final static String type = ".png";
     private TYPE cType;
@@ -37,4 +37,13 @@ public class Card implements Serializable {
     }
     public TYPE getcType(){return cType;}
     public COLOR getColor(){return color;}
+
+    @Override
+    public int compareTo(Card card) {
+        if (card.getcType().ordinal() > cType.ordinal()){
+            return 1;
+        }else{
+            return -1;
+        }
+    }
 }
