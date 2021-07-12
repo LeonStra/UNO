@@ -1,11 +1,14 @@
-package client;
+package bothSides;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
 
-public class JSwitchBox extends JToggleButton {
+public class JSwitchBox extends AbstractButton {
     private Color colorBright = new Color(220,220,220);
     private Color colorDark = new Color(150,150,150);
     private Color black  = new Color(0,0,0,100);
@@ -16,23 +19,29 @@ public class JSwitchBox extends JToggleButton {
 
     private int globalWidth = 0;
     private Dimension thumbBounds;
+    private ArrayList<ActionListener> listener;
 
 
-    public JSwitchBox(int width) {
+    public JSwitchBox(int width, boolean selected) {
+        listener = new ArrayList<>();
         thumbBounds  = new Dimension(2*width,20);
         globalWidth =  4*width;
         setModel(new DefaultButtonModel());
-        setSelected(false);
+        setSelected(selected);
         addMouseListener(new MouseAdapter(){
             @Override
             public void mouseReleased( MouseEvent e ) {
                 if(new Rectangle(getPreferredSize()).contains(e.getPoint())){
-                    System.out.println("Switch1: "+isSelected());
                     setSelected(!isSelected());
-                    System.out.println("Switch2: "+isSelected());
+                    listener.forEach(l -> l.actionPerformed(null));
                 }
             }
         });
+    }
+
+    @Override
+    public void addActionListener(ActionListener l) {
+        listener.add(l);
     }
 
     @Override

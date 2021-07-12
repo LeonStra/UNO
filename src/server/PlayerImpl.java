@@ -1,6 +1,6 @@
 package server;
 
-import Exceptions.*;
+import bothSides.Exceptions.*;
 import bothSides.*;
 
 import java.rmi.RemoteException;
@@ -39,7 +39,6 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
         this.drawPile = drawPile;
         this.playPile = playPile;
         this.players = players;
-        //this.players.add(this);
     }
 
     //Spiel verlassen
@@ -233,8 +232,8 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
             this.view = view;
             giveCards(7);
         }
-        hand.add(new Card(TYPE.EIGHT,COLOR.YELLOW));
-        hand.add(new Card(TYPE.EIGHT,COLOR.YELLOW));
+        hand.add(new Card(TYPE.THREE,COLOR.YELLOW));
+        hand.add(new Card(TYPE.TWO,COLOR.YELLOW));
         hand.add(new Card(TYPE.WILD,COLOR.MULTICOLORED));
     }
     @Override
@@ -244,6 +243,7 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
     @Override
     public void setSorting(boolean b) throws RemoteException {
         sorting = b;
+        refreshView();
     }
 
     @Override
@@ -252,7 +252,7 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
     }
     @Override
     public boolean getSorting() throws RemoteException {
-        return false;
+        return sorting;
     }
     @Override
     public Card getTop(){
@@ -273,6 +273,7 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
         names.removeLast();
         return names;
     }
+    @Override
     public String getName() {
         return name;
     }

@@ -1,4 +1,4 @@
-package Exceptions;
+package bothSides.Exceptions;
 
 public class NotSuitableException extends Exception{
     public NotSuitableException(String message){

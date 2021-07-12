@@ -1,16 +1,16 @@
 package server;
 
-import Exceptions.*;
+import bothSides.Exceptions.*;
 import bothSides.*;
 
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 
 public class ExtPlayerImpl extends PlayerImpl implements ExtPlayer{
     protected boolean showFour;
     protected boolean throwaway;
-    protected Card fourCard;
 
     public ExtPlayerImpl(LinkedList<Card> drawPile, LinkedList<Card> playPile, LinkedList<PlayerImpl> players, Counter drawCount, LinkedList<ChatMessage> chatHistory) throws RemoteException {
         super(drawPile, playPile, players, drawCount, chatHistory);
@@ -21,7 +21,6 @@ public class ExtPlayerImpl extends PlayerImpl implements ExtPlayer{
     @Override
     public void play(Card card) throws RemoteException, NotSuitableException {
         boolean wait = false;
-
         if (throwaway){
             hand.remove(card);
             if (players.getFirst().getHand().size() == hand.size()){
@@ -30,7 +29,6 @@ public class ExtPlayerImpl extends PlayerImpl implements ExtPlayer{
                 next();
             }
         } else if (showFour){
-            fourCard = card;
             showFour = false;
             next();
         }else if (playPile.getFirst().suitable(card) && myTurn || playPile.getFirst().equals(card)){
@@ -180,12 +178,20 @@ public class ExtPlayerImpl extends PlayerImpl implements ExtPlayer{
 
     @Override
     public void wishCard(Card card, String playerName) throws RemoteException {
-        players.forEach(p -> {
-            if(p.getName().equals(playerName) && p.hand.contains(card)){
-                p.hand.remove(card);
-                this.hand.add(card);
-            }
-        });
+        if (myTurn && !card.getcType().equals(TYPE.UNKNOWN) && !card.getColor().equals(COLOR.UNKNOWN) && getNameList().contains(playerName) && !name.equals(playerName) && alreadyPlayed && playPile.getFirst().getcType().equals(TYPE.THREE)){
+            Card finalCard = card.getcType().equals(TYPE.WILDFOUR) || card.getcType().equals(TYPE.WILD)?new Card(card.getcType(),COLOR.MULTICOLORED):card;
+            players.forEach(p -> {
+                if (p.getName().equals(playerName) && p.hand.contains(finalCard)) {
+                    p.hand.remove(finalCard);
+                    this.hand.add(finalCard);
+                    this.setNews("Karte bekommen");
+                }
+            });
+            next();
+        }else {
+            view.wishCard();
+            view.setNews("Falsche Eingabe");
+        }
     }
 
     @Override
@@ -197,5 +203,13 @@ public class ExtPlayerImpl extends PlayerImpl implements ExtPlayer{
             view.setNews("Es waren: " + count + " 8er");
             next();
         }
+    }
+
+    @Override
+    public LinkedList<Card> getPlayPile(){
+        if (myTurn && alreadyPlayed && getTop().getcType().equals(TYPE.TWO)){
+            return playPile;
+        }
+        return null;
     }
 }

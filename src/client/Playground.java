@@ -1,7 +1,7 @@
 package client;
 
-import Exceptions.NotSuitableException;
-import Exceptions.TurnException;
+import bothSides.Exceptions.NotSuitableException;
+import bothSides.Exceptions.TurnException;
 import bothSides.*;
 
 import javax.swing.*;
@@ -13,7 +13,9 @@ import java.io.*;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.List;
 
 public class Playground extends UnicastRemoteObject implements View {
     private final Dimension cardDimension = new Dimension(101,151);
@@ -40,6 +42,7 @@ public class Playground extends UnicastRemoteObject implements View {
 
     //Initialisierung des Fensters
     public Playground(Player player,String name) throws IOException{
+        this.dark = false;
         this.player = player;
         this.dialogs = new ArrayList<>();
         this.frame = new JFrame("INFUNO");
@@ -62,6 +65,7 @@ public class Playground extends UnicastRemoteObject implements View {
         frame.setSize(1200,800);
         frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
         frame.setLocationRelativeTo(null);
+        frame.setIconImage(new ImageIcon("media/symbols/logo.png").getImage());
         frame.setLayout(new BorderLayout());
         frame.addWindowListener(new WindowAdapter() {
             @Override
@@ -197,28 +201,32 @@ public class Playground extends UnicastRemoteObject implements View {
         eastPanel.removeAll();
         settingPanel.removeAll();
 
-        JSwitchBox darkSwitch = createSettingToggle("Dark-Mode");
-        darkSwitch.addActionListener(e -> {
-            System.out.println("sInit: "+darkSwitch.isSelected());
-            toggleDarkMode(darkSwitch.isSelected());
-        });
-        darkSwitch.setSelected(dark);
-                JSwitchBox sort = createSettingToggle("Hand sortieren");
-        sort.addActionListener(new ActionListener() {
+        JSwitchBox darkSwitch = createSettingToggle("Dark-Mode",dark);
+        darkSwitch.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e){
-                try {
-                    player.setSorting(sort.isSelected());
-                } catch (RemoteException remoteException) {
-                    remoteException.printStackTrace();
-                }
+            public void actionPerformed(ActionEvent e) {
+                dark = darkSwitch.isSelected();
+                toggleDarkMode();
             }
         });
+
         try {
-            sort.setSelected(!player.getSorting());
+            JSwitchBox sortSwitch = createSettingToggle("Hand sortieren", player.getSorting());
+            sortSwitch.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    try {
+                        player.setSorting(sortSwitch.isSelected());
+                    } catch (RemoteException remoteException) {
+                        remoteException.printStackTrace();
+                    }
+                    toggleDarkMode();
+                }
+            });
         } catch (RemoteException e) {
             e.printStackTrace();
         }
+
 
         JButton sources = new JButton("Quellen");
         sources.addActionListener(new ActionListener() {
@@ -251,12 +259,21 @@ public class Playground extends UnicastRemoteObject implements View {
     }
 
     //Einstellungsmöglichkeit einrichten
-    private JSwitchBox createSettingToggle(String txt){
+    private JSwitchBox createSettingToggle(String txt, boolean selected){
         JPanel panel = new JPanel();
         JLabel label = new JLabel(txt);
         label.setFont(new Font("Arial",Font.BOLD,20));
         panel.add(label);
-        JSwitchBox jSwitch = new JSwitchBox(10);
+        JSwitchBox jSwitch = new JSwitchBox(10,selected);
+        jSwitch.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (jSwitch.isSelected()){
+                    System.out.println("an");
+                }
+            }
+        });
+
         panel.add(jSwitch);
         panel.setPreferredSize(new Dimension(sitesWidth-5,panel.getPreferredSize().height));
         settingPanel.add(panel);
@@ -264,9 +281,7 @@ public class Playground extends UnicastRemoteObject implements View {
     }
 
     //Dark/Light-Mode Wechsel
-    private void toggleDarkMode(boolean b){
-        System.out.println(b);
-        dark = b;
+    private void toggleDarkMode(){
         try {
             if (dark){
                 UIManager.setLookAndFeel(new NimbusLookAndFeel());
@@ -427,6 +442,7 @@ public class Playground extends UnicastRemoteObject implements View {
             @Override
             public void actionPerformed(ActionEvent e) {
                 drawDialog.dispose();
+                dialogs.remove(drawDialog);
             }
         });
         buttonPanel.add(draw);
@@ -444,7 +460,6 @@ public class Playground extends UnicastRemoteObject implements View {
 
         for(COLOR c : COLOR.values()) {
             if (COLOR.getExcluded().contains(c)) {continue;}
-            System.out.println("media/colorCircles/"+c.getShortcut()+"Circle.png");
             JButton b = colorDialog.initPicButton("", "media/colorCircles/"+c.getShortcut()+"Circle.png");
             panel.add(b);
             b.addActionListener(new ActionListener() {
@@ -460,41 +475,105 @@ public class Playground extends UnicastRemoteObject implements View {
                 }
             });
         }
-        colorDialog.add(panel);
+        colorDialog.add(panel,BorderLayout.CENTER);
         colorDialog.setVisible(true);
     }
 
     //2
     private void takeFromPlayPileDialog(){
         UnoDialog dialog = new UnoDialog(frame,"Wähle eine Karte","Wähle deine Karte");
+        dialogs.add(dialog);
+
+        JPanel cardPanel = new JPanel();
+        JPanel colorPanel = new JPanel();
+
+        //Alle Farben
+        for(COLOR color : COLOR.values()) {
+            if (COLOR.getExcluded().contains(color)) {continue;}
+            JButton b = dialog.initPicButton("", "media/colorCircles/"+color.getShortcut()+"Circle.png");
+            colorPanel.add(b);
+            b.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    cardPanel.removeAll();
+                    try {
+                        for ( Card c : ((ExtPlayer) player).getPlayPile()){
+                            JButton cardButton = new JButton();
+                            if (c.getColor().equals(color) && TYPE.getMultiColored().contains(c.getcType())){
+                                cardButton = newCardButton(c,false);
+                                cardPanel.add(cardButton);
+                            }else if (TYPE.getMultiColored().contains(c.getcType())){
+                                c = new Card(c.getcType(),COLOR.MULTICOLORED);
+                                cardButton = newCardButton(c,false);
+                                cardPanel.add(cardButton);
+                            }
+                            Card finalC = c;
+                            cardButton.addActionListener(new ActionListener() {
+                                @Override
+                                public void actionPerformed(ActionEvent e) {
+                                    try {
+                                        dialog.dispose();
+                                        dialogs.remove(dialog);
+                                        ((ExtPlayer) player).chooseFromPlayPile(finalC);
+                                    } catch (RemoteException remoteException) {
+                                        remoteException.printStackTrace();
+                                    }
+                                }
+                            });
+                        }
+                    } catch (RemoteException remoteException) {
+                        remoteException.printStackTrace();
+                    }
+                    dialog.repaint();
+                    dialog.revalidate();
+                }
+            });
+        }
+
+        dialog.add(colorPanel, BorderLayout.WEST);
+        dialog.add(cardPanel, BorderLayout.CENTER);
+        dialog.setVisible(true);
     }
 
     //Dialog zum Karte wünschen
     private void wishCardDialog() throws RemoteException {
         UnoDialog wishDialog = new UnoDialog(frame,"Karte wünschen","Wünsche dir eine Karte");
-        JComboBox players = new JComboBox(player.getNameList().toArray());
-        JComboBox types = new JComboBox(TYPE.values());
-        JComboBox colors = new JComboBox(COLOR.values());
+        dialogs.add(wishDialog);
+        List<String> playersData = player.getNameList();
+        playersData.remove(player.getName());
+        List<TYPE> typesData = new ArrayList(Arrays.asList(TYPE.values()));
+        typesData.remove(TYPE.UNKNOWN);
+        List<COLOR> colorsData = new ArrayList(Arrays.asList(COLOR.values()));
+        colorsData.removeAll(COLOR.getExcluded());
+
+        JComboBox players = new JComboBox(playersData.toArray());
+        JComboBox types = new JComboBox(typesData.toArray());
+        JComboBox colors = new JComboBox(colorsData.toArray());
         JButton submit = new JButton("Ok");
         submit.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    ((ExtPlayer)(player)).wishCard(new Card(TYPE.WILDFOUR,COLOR.MULTICOLORED),player.getNameList().get(players.getSelectedIndex()));
+                    wishDialog.dispose();
+                    dialogs.remove(wishDialog);
+                    ((ExtPlayer)(player)).wishCard(new Card((TYPE) types.getSelectedItem(),(COLOR) colors.getSelectedItem()),(String) players.getSelectedItem());
                 } catch (RemoteException remoteException) {
                     remoteException.printStackTrace();
                 }
             }
         });
-        wishDialog.add(players);
-        wishDialog.add(types);
-        wishDialog.add(colors);
-        wishDialog.add(submit);
-        
+        JPanel panel = new JPanel();
+        panel.add(players);
+        panel.add(types);
+        panel.add(colors);
+        wishDialog.add(panel,BorderLayout.CENTER);
+        wishDialog.add(submit,BorderLayout.SOUTH);
+        wishDialog.setVisible(true);
     }
 
     private void bummsDialog(){
         UnoDialog dialog = new UnoDialog(frame,"BUMMMMMMMMS","Wie viele 8er sind im Ablagestapel?");
+        dialogs.add(dialog);
         JSlider slider= new JSlider(JSlider.HORIZONTAL,1,8,1);
         slider.setMinorTickSpacing(1);
         slider.setMajorTickSpacing(2);
@@ -505,6 +584,7 @@ public class Playground extends UnicastRemoteObject implements View {
             @Override
             public void actionPerformed(ActionEvent e) {
                 dialog.dispose();
+                dialogs.remove(dialog);
                 try {
                     ((ExtPlayer)player).bummsReturn(slider.getValue());
                 } catch (RemoteException remoteException) {

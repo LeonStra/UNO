@@ -1,7 +1,7 @@
 package bothSides;
 
-import Exceptions.NotSuitableException;
-import Exceptions.TurnException;
+import bothSides.Exceptions.NotSuitableException;
+import bothSides.Exceptions.TurnException;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -25,4 +25,5 @@ public interface Player extends Remote {
     boolean getSorting() throws RemoteException;
     Card getTop() throws RemoteException;
     LinkedList<String> getNameList() throws RemoteException;
+    String getName() throws RemoteException;
 }

@@ -1,6 +1,6 @@
 package server;
 
-import Exceptions.*;
+import bothSides.Exceptions.*;
 import bothSides.*;
 
 import java.io.*;
@@ -131,5 +131,9 @@ public class Server{
         Collections.shuffle(drawPile);
         playPile.addFirst(drawPile.getFirst());
         drawPile.removeFirst();
+    }
+
+    public void setExtended(boolean extended){
+        this.extended = extended;
     }
 }

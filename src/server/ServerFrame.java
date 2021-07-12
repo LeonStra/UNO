@@ -1,8 +1,10 @@
 package server;
 
-import Exceptions.TurnException;
+import bothSides.Exceptions.TurnException;
+import bothSides.JSwitchBox;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
@@ -19,6 +21,7 @@ public class ServerFrame extends JFrame {
         //Fenster Einstellungen
         setSize(1200,800);
         setLocationRelativeTo(null);
+        setLayout(new BorderLayout());
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -26,30 +29,38 @@ public class ServerFrame extends JFrame {
             }
         });
 
+
+
         JPanel panel = new JPanel();
+        JLabel label = new JLabel("Erweiterte Version?");
+        label.setFont(new Font("Arial",Font.BOLD,20));
+        panel.add(label);
+        JSwitchBox jSwitch = new JSwitchBox(10,true);
+        panel.add(jSwitch);
 
         JLabel ip = new JLabel("X");
         try {
-            ip = new JLabel(Inet4Address.getLocalHost().getHostAddress().toString());
+            ip.setText(Inet4Address.getLocalHost().getHostAddress().toString());
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
 
-        JButton b = new JButton("LOS!");
-        b.addActionListener(new ActionListener() {
+        JButton submit = new JButton("LOS!");
+        submit.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
                     dispose();
+                    server.setExtended(jSwitch.isSelected());
                     server.start();
                 } catch (IOException | TurnException ioException) {
                     ioException.printStackTrace();
                 }
             }
         });
-        panel.add(ip);
-        panel.add(b);
-        add(panel);
+        add(ip,BorderLayout.NORTH);
+        add(panel,BorderLayout.CENTER);
+        add(submit,BorderLayout.SOUTH);
         setVisible(true);
     }
 }
