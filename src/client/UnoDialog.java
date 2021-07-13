@@ -9,7 +9,7 @@ public class UnoDialog extends JDialog{
         //Dialog einrichten
         super(frame,true);
         setSize(400,200);
-        setLocationRelativeTo(frame);
+        setLocationRelativeTo(null);
         setTitle(title);
         setLayout(new BorderLayout());
         setDefaultCloseOperation(0);

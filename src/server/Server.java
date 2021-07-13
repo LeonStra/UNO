@@ -24,11 +24,15 @@ public class Server{
     private ArrayList<String> idList;
 
     //"Datenmodell"
-    private LinkedList<bothSides.Card> drawPile;
-    private LinkedList<bothSides.Card> playPile;
+    private Pile drawPile;
+    private Pile playPile;
     private LinkedList<PlayerImpl> players;
     private LinkedList<ChatMessage> chatHistory;
     private Counter drawCount; //Adapterklasse, damit die Zahl global aktualisiert wird
+
+    //Erweitertes Datenmodell
+    private ArrayList<ExtPlayerImpl> buzzedList;
+    private HashMap<ExtPlayerImpl,Integer> fourMap;
 
     public static void main(String[] args) throws IOException{
         new Server();
@@ -52,7 +56,8 @@ public class Server{
 
             //Spieler hinzufügen
             try {
-                PlayerImpl player = extended?new ExtPlayerImpl(drawPile,playPile,players,drawCount,chatHistory) : new PlayerImpl(drawPile,playPile,players,drawCount,chatHistory);
+                System.out.println("Extended: "+extended);
+                PlayerImpl player = extended?new ExtPlayerImpl(drawPile,playPile,players,drawCount,chatHistory,buzzedList,fourMap) : new PlayerImpl(drawPile,playPile,players,drawCount,chatHistory);
                 players.add(player);
                 System.out.println(serverLocation+id);
                 Naming.rebind(serverLocation+id,player);
@@ -74,18 +79,20 @@ public class Server{
     public Server () throws IOException {
         this.sockets = new ArrayList<>();
         this.idList = new ArrayList<>();
-        this.drawPile = new LinkedList<>();
-        this.playPile = new LinkedList<>();
+        this.drawPile = new Pile();
+        this.playPile = new Pile();
         this.players = new LinkedList<>();
         this.chatHistory = new LinkedList<>();
         this.drawCount = new Counter();
         this.drawCount.setCounter(0);
+        this.buzzedList = new ArrayList<>();
+        this.fourMap = new HashMap<>();
         new ServerFrame(this);
         createDeck();
-        startSockets();
     }
 
-    private void startSockets() throws IOException {
+    public void startSockets(boolean extended) throws IOException {
+        this.extended = extended;
         serversocket = new ServerSocket(connPort);
         java.rmi.registry.LocateRegistry.createRegistry(1099);
         while (pending){
@@ -99,7 +106,7 @@ public class Server{
         }
     }
 
-    void start() throws IOException, TurnException {
+    public void start() throws IOException, TurnException {
         pending = false;
         serversocket.close();
         Collections.shuffle(players);
@@ -133,7 +140,7 @@ public class Server{
         drawPile.removeFirst();
     }
 
-    public void setExtended(boolean extended){
-        this.extended = extended;
+    public boolean getExtended(){
+        return extended;
     }
 }

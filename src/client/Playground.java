@@ -39,6 +39,7 @@ public class Playground extends UnicastRemoteObject implements View {
     private JTextArea chatHistory;
     private JPanel settingPanel;
     private JLabel news;
+    private JButton buzzer;
 
     //Initialisierung des Fensters
     public Playground(Player player,String name) throws IOException{
@@ -57,6 +58,7 @@ public class Playground extends UnicastRemoteObject implements View {
         this.chatHistory = new JTextArea();
         this.settingPanel = new JPanel();
         this.playPanel = new JPanel(new GridLayout());
+        this.buzzer = newImageButton("media/symbols/buzzer.png",new Dimension(64,64));
 
         this.player.setView(this);
         this.player.setName(name);
@@ -165,7 +167,20 @@ public class Playground extends UnicastRemoteObject implements View {
             }
         });
         unoPanel.add(uno);
-        midPanel.add(new JPanel());
+        JPanel leftPanel = new JPanel(new GridBagLayout());
+        leftPanel.add(buzzer);
+        buzzer.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    ((ExtPlayer) player).buzzed();
+                } catch (RemoteException remoteException) {
+                    remoteException.printStackTrace();
+                }
+            }
+        });
+        buzzer.setVisible(false);
+        midPanel.add(leftPanel);
         midPanel.add(playPanel);
         midPanel.add(unoPanel);
 
@@ -265,14 +280,6 @@ public class Playground extends UnicastRemoteObject implements View {
         label.setFont(new Font("Arial",Font.BOLD,20));
         panel.add(label);
         JSwitchBox jSwitch = new JSwitchBox(10,selected);
-        jSwitch.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (jSwitch.isSelected()){
-                    System.out.println("an");
-                }
-            }
-        });
 
         panel.add(jSwitch);
         panel.setPreferredSize(new Dimension(sitesWidth-5,panel.getPreferredSize().height));
@@ -285,9 +292,9 @@ public class Playground extends UnicastRemoteObject implements View {
         try {
             if (dark){
                 UIManager.setLookAndFeel(new NimbusLookAndFeel());
-                UIManager.put("control", new Color(128, 128, 128));
-                UIManager.put("info", new Color(128, 128, 128));
-                UIManager.put("nimbusBase", new Color(18, 30, 49));
+                UIManager.put("control", new Color(50, 50, 50));
+                UIManager.put("info", new Color(50, 50, 50));
+                UIManager.put("nimbusBase", new Color(36, 35, 35));
                 UIManager.put("nimbusAlertYellow", new Color(248, 187, 0));
                 UIManager.put("nimbusDisabledText", new Color(128, 128, 128));
                 UIManager.put("nimbusFocus", new Color(115, 164, 209));
@@ -406,8 +413,13 @@ public class Playground extends UnicastRemoteObject implements View {
     }
 
     @Override
-    public void toggleFastButton(boolean b) throws RemoteException {
+    public void toggleBuzzer(boolean b) throws RemoteException {
+        buzzer.setVisible(b);
+    }
 
+    @Override
+    public void fourThrowIn() throws RemoteException {
+        SwingUtilities.invokeLater(() -> fourDialog());
     }
 
     //Dialog-Ausführung
@@ -481,11 +493,13 @@ public class Playground extends UnicastRemoteObject implements View {
 
     //2
     private void takeFromPlayPileDialog(){
-        UnoDialog dialog = new UnoDialog(frame,"Wähle eine Karte","Wähle deine Karte");
+        UnoDialog dialog = new UnoDialog(frame,"Wähle eine Karte","Wähle deine Karte",new Dimension(800,700));
         dialogs.add(dialog);
 
         JPanel cardPanel = new JPanel();
         JPanel colorPanel = new JPanel();
+        colorPanel.setPreferredSize(new Dimension(130,colorPanel.getPreferredSize().height));
+        colorPanel.setBorder(new EmptyBorder(0,10,0,0));
 
         //Alle Farben
         for(COLOR color : COLOR.values()) {
@@ -499,22 +513,18 @@ public class Playground extends UnicastRemoteObject implements View {
                     try {
                         for ( Card c : ((ExtPlayer) player).getPlayPile()){
                             JButton cardButton = new JButton();
-                            if (c.getColor().equals(color) && TYPE.getMultiColored().contains(c.getcType())){
-                                cardButton = newCardButton(c,false);
-                                cardPanel.add(cardButton);
-                            }else if (TYPE.getMultiColored().contains(c.getcType())){
-                                c = new Card(c.getcType(),COLOR.MULTICOLORED);
+                            if (c.getColor().equals(color)){
                                 cardButton = newCardButton(c,false);
                                 cardPanel.add(cardButton);
                             }
-                            Card finalC = c;
+
                             cardButton.addActionListener(new ActionListener() {
                                 @Override
                                 public void actionPerformed(ActionEvent e) {
                                     try {
                                         dialog.dispose();
                                         dialogs.remove(dialog);
-                                        ((ExtPlayer) player).chooseFromPlayPile(finalC);
+                                        ((ExtPlayer) player).chooseFromPlayPile(c);
                                     } catch (RemoteException remoteException) {
                                         remoteException.printStackTrace();
                                     }
@@ -576,7 +586,7 @@ public class Playground extends UnicastRemoteObject implements View {
         dialogs.add(dialog);
         JSlider slider= new JSlider(JSlider.HORIZONTAL,1,8,1);
         slider.setMinorTickSpacing(1);
-        slider.setMajorTickSpacing(2);
+        slider.setMajorTickSpacing(1);
         slider.setPaintTicks(true);
         slider.setPaintLabels(true);
         JButton submit = new JButton("OK");
@@ -594,6 +604,38 @@ public class Playground extends UnicastRemoteObject implements View {
         });
         dialog.add(slider,BorderLayout.CENTER);
         dialog.add(submit,BorderLayout.SOUTH);
+        dialog.setVisible(true);
+    }
+
+    private void fourDialog(){
+        UnoDialog dialog = new UnoDialog(frame,"Ziehen", "Willst du deine 4 reinwerfen?");
+        dialogs.add(dialog);
+        JPanel buttonPanel = new JPanel();
+        JButton draw = new JButton("Ja");
+        draw.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    dialog.dispose();
+                    dialogs.remove(dialog);
+                    ((ExtPlayer)player).throwIn();
+                } catch (RemoteException | NotSuitableException remoteException) {
+                    remoteException.printStackTrace();
+                }
+            }
+        });
+        JButton play = new JButton("Nein");
+        play.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                dialog.dispose();
+                dialogs.remove(dialog);
+            }
+        });
+        buttonPanel.add(draw);
+        buttonPanel.add(play);
+
+        dialog.add(buttonPanel,BorderLayout.CENTER);
         dialog.setVisible(true);
     }
 

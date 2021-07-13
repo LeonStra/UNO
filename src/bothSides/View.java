@@ -16,7 +16,8 @@ public interface View extends Remote {
     void takeFromPlayPile() throws RemoteException;
     void wishCard() throws RemoteException;
     void bumms() throws RemoteException;
-    void toggleFastButton(boolean b) throws RemoteException;
+    void toggleBuzzer(boolean b) throws RemoteException;
+    void fourThrowIn() throws RemoteException;
 
     //Changes
     void setNews(String txt) throws RemoteException;

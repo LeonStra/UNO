@@ -40,10 +40,14 @@ public class Card implements Serializable, Comparable<Card> {
 
     @Override
     public int compareTo(Card card) {
-        if (card.getcType().ordinal() > cType.ordinal()){
+        //1 = greater / -1 smaller / 0 equal
+        if (card.getColor().ordinal() < this.getColor().ordinal()){
             return 1;
-        }else{
+        }else if(card.getColor().ordinal() > this.getColor().ordinal()){
             return -1;
+        }else if(card.getcType().ordinal() < this.getcType().ordinal()){
+            return 1;
         }
+        return -1;
     }
 }

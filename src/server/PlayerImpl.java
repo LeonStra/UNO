@@ -19,13 +19,13 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
     protected Hand hand;
     protected LinkedList<ChatMessage> chatHistory;
     protected Counter drawCount;
-    protected LinkedList<Card> drawPile;
-    protected LinkedList<Card> playPile;
+    protected Pile drawPile;
+    protected Pile playPile;
     protected LinkedList<PlayerImpl> players;
     protected View view;
 
     //Spieler initialisieren
-    public PlayerImpl(LinkedList<Card> drawPile, LinkedList<Card> playPile, LinkedList<PlayerImpl> players, Counter drawCount, LinkedList<ChatMessage> chatHistory) throws RemoteException {
+    public PlayerImpl(Pile drawPile, Pile playPile, LinkedList<PlayerImpl> players, Counter drawCount, LinkedList<ChatMessage> chatHistory) throws RemoteException {
         this.name = "Unbekannt";
         this.myTurn = false;
         this.increased = false;
@@ -88,6 +88,10 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
         myTurn = false;
         saidUno = false;
         view.changeDrawPass(true);
+        if (hand.size() == 0) {
+            leaveGame();
+            setNews( getName() + "won the Game");
+        }
         try {
             players.getFirst().itsMyTurn();
         } catch (TurnException e) {
@@ -153,6 +157,8 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
             hand.remove(card);
             playPile.addFirst(card);
             alreadyPlayed = true;
+
+
             if (!wait) {
                 next();
             }
@@ -204,11 +210,11 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
     //Karte ziehen-Button
     @Override
     public void drawCard() throws RemoteException{
-        if (myTurn && !cardDrawn) {
+        if (myTurn && !cardDrawn && !alreadyPlayed) {
             giveCards(1);
             cardDrawn = true;
             view.changeDrawPass(false);
-        }else if(myTurn){
+        }else if(myTurn && !alreadyPlayed){
             next();
         }
     }
@@ -233,7 +239,7 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
             giveCards(7);
         }
         hand.add(new Card(TYPE.THREE,COLOR.YELLOW));
-        hand.add(new Card(TYPE.TWO,COLOR.YELLOW));
+        hand.add(new Card(TYPE.FOUR,COLOR.YELLOW));
         hand.add(new Card(TYPE.WILD,COLOR.MULTICOLORED));
     }
     @Override

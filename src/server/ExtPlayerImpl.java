@@ -6,14 +6,19 @@ import bothSides.*;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 
 public class ExtPlayerImpl extends PlayerImpl implements ExtPlayer{
+    protected ArrayList<ExtPlayerImpl> buzzedList;
+    private HashMap<ExtPlayerImpl,Integer> fourMap;
     protected boolean showFour;
     protected boolean throwaway;
 
-    public ExtPlayerImpl(LinkedList<Card> drawPile, LinkedList<Card> playPile, LinkedList<PlayerImpl> players, Counter drawCount, LinkedList<ChatMessage> chatHistory) throws RemoteException {
+    public ExtPlayerImpl(Pile drawPile, Pile playPile, LinkedList<PlayerImpl> players, Counter drawCount, LinkedList<ChatMessage> chatHistory, ArrayList<ExtPlayerImpl> buzzedList, HashMap<ExtPlayerImpl,Integer> fourMap) throws RemoteException {
         super(drawPile, playPile, players, drawCount, chatHistory);
+        this.buzzedList = buzzedList;
+        this.fourMap = fourMap;
         this.throwaway = false;
         this.showFour = false;
     }
@@ -30,11 +35,17 @@ public class ExtPlayerImpl extends PlayerImpl implements ExtPlayer{
             }
         } else if (showFour){
             showFour = false;
-            next();
-        }else if (playPile.getFirst().suitable(card) && myTurn || playPile.getFirst().equals(card)){
-            System.out.println(playPile.getFirst().getColor());
+            fourMap.put(this,card.getcType().getValue());
+            if (fourMap.size() == players.size()){
+                int max =Collections.max(fourMap.values());
+                for (ExtPlayerImpl p : fourMap.keySet()){
+                    p.giveCards(max <= fourMap.get(p)?2:0);
+                }
+                next();
+            }
+        }else if ((playPile.getFirst().suitable(card) && myTurn) || playPile.getFirst().equals(card)){
             //Reinwerfen
-            if (!myTurn){
+            if (playPile.getFirst().equals(card)){
                 ((ExtPlayerImpl)players.getLast()).breakTurn();
                 while (players.getLast() != this){
                     players.addLast(players.getFirst());
@@ -48,9 +59,7 @@ public class ExtPlayerImpl extends PlayerImpl implements ExtPlayer{
             switch (card.getcType()){
                 case ZERO:
                     Hand h = players.getLast().hand;
-                    System.out.println(players.size());
                     for (PlayerImpl p : players){
-                        System.out.println(p.getName());
                         if (players.indexOf(p) != 0) {
                             p.hand = players.get(players.indexOf(p) - 1).hand;
                         }
@@ -75,8 +84,10 @@ public class ExtPlayerImpl extends PlayerImpl implements ExtPlayer{
                     wait = true;
                     break;
                 case FOUR:
+                    System.out.println("hi");
+                    fourMap.clear();
                     players.forEach(p -> {
-                        ((ExtPlayerImpl) p).showFour = true;
+                        ((ExtPlayerImpl) p).setShowFour(true);
                         p.setNews("Zeige eine Karte");
                     });
                     wait = true;
@@ -116,7 +127,14 @@ public class ExtPlayerImpl extends PlayerImpl implements ExtPlayer{
                     wait = true;
                     break;
                 case NINE:
-                    view.toggleFastButton(true);
+                    buzzedList.clear();
+                    players.forEach(p -> {
+                        try {
+                            p.view.toggleBuzzer(true);
+                        } catch (RemoteException e) {
+                            e.printStackTrace();
+                        }
+                    });
                     wait = true;
                     break;
                 case DRAWTWO:
@@ -165,15 +183,21 @@ public class ExtPlayerImpl extends PlayerImpl implements ExtPlayer{
         increased = false;
         myTurn = false;
         saidUno = false;
+        throwaway = false;
+        showFour = false;
         view.changeDrawPass(true);
 
     }
 
     @Override
     public void chooseFromPlayPile(Card card) throws RemoteException {
-        playPile.remove(card);
-        hand.add(card);
-        next();
+        if (myTurn && alreadyPlayed && playPile.getFirst().getcType().equals(TYPE.TWO) && playPile.contains(card)){
+            playPile.remove(card);
+            hand.add(TYPE.getMultiColored().contains(card.getcType())?new Card(card.getcType(),COLOR.MULTICOLORED):card);
+            next();
+        }else{
+            view.takeFromPlayPile();
+        }
     }
 
     @Override
@@ -198,10 +222,27 @@ public class ExtPlayerImpl extends PlayerImpl implements ExtPlayer{
     public void bummsReturn(int i) throws RemoteException {
         if (myTurn && playPile.getFirst().getcType().equals(TYPE.EIGHT) && alreadyPlayed){
             int count = playPile.stream().mapToInt(c -> c.getcType().equals(TYPE.EIGHT) ? 1 : 0).sum();
-            System.out.println(count);
             giveCards(count == i?0:count);
             view.setNews("Es waren: " + count + " 8er");
             next();
+        }
+    }
+
+    @Override
+    public void buzzed() throws RemoteException {
+        buzzedList.add(this);
+        view.toggleBuzzer(false);
+        if (buzzedList.size() == players.size()){
+            players.forEach(p -> p.setNews(getName() + " ist letzter"));
+            giveCards(1);
+            players.getLast().next();
+        }
+    }
+
+    @Override
+    public void throwIn() throws RemoteException, NotSuitableException {
+        if (hand.contains(playPile.getFirst())){
+            play(playPile.getFirst());
         }
     }
 
@@ -211,5 +252,18 @@ public class ExtPlayerImpl extends PlayerImpl implements ExtPlayer{
             return playPile;
         }
         return null;
+    }
+
+    private void setShowFour(boolean b){
+        if (hand.contains(playPile.getFirst())){
+            System.out.println("OUCH"+getName());
+            try {
+                view.fourThrowIn();
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }else {
+            showFour = true;
+        }
     }
 }
