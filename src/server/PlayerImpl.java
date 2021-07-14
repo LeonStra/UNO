@@ -77,6 +77,7 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
 
     //Abschluss des Zuges
     public void next() throws RemoteException {
+        System.out.println("Next Sup");
         if (!increased && drawCount.getCounter() > 0){
             takeDrawCount();
         }
@@ -122,7 +123,7 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
     public void play(Card card) throws RemoteException, NotSuitableException, TurnException {
         boolean wait = false;
 
-        if (playPile.getFirst().suitable(card) && myTurn){
+        if (playPile.getFirst().suitable(card) && myTurn && !alreadyPlayed){
             switch (card.getcType()){
                 case DRAWTWO:
                     drawCount.addCounter(2);

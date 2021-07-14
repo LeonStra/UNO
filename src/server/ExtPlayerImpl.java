@@ -24,6 +24,21 @@ public class ExtPlayerImpl extends PlayerImpl implements ExtPlayer{
     }
 
     @Override
+    public void next() throws RemoteException {
+        System.out.println("hi");
+        myTurn = false;
+        view.changeDrawPass(true);
+        try {
+            System.out.println("before");
+            Thread.sleep(1*1000);
+            System.out.println("after");
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        super.next();
+    }
+
+    @Override
     public void play(Card card) throws RemoteException, NotSuitableException {
         boolean wait = false;
         if (throwaway){
@@ -43,9 +58,9 @@ public class ExtPlayerImpl extends PlayerImpl implements ExtPlayer{
                 }
                 next();
             }
-        }else if ((playPile.getFirst().suitable(card) && myTurn) || playPile.getFirst().equals(card)){
+        }else if ((playPile.getFirst().suitable(card) && (myTurn || card.getcType().equals(TYPE.SIX))) || playPile.getFirst().equals(card)){
             //Reinwerfen
-            if (playPile.getFirst().equals(card)){
+            if (playPile.getFirst().equals(card) || card.getcType().equals(TYPE.SIX)){
                 ((ExtPlayerImpl)players.getLast()).breakTurn();
                 while (players.getLast() != this){
                     players.addLast(players.getFirst());
@@ -98,7 +113,6 @@ public class ExtPlayerImpl extends PlayerImpl implements ExtPlayer{
                     players.getFirst().setNews("Lege was du willst");
                     break;
                 case SIX:
-
                     break;
                 case SEVEN:
                     //Zusammenlegen
@@ -255,7 +269,7 @@ public class ExtPlayerImpl extends PlayerImpl implements ExtPlayer{
     }
 
     private void setShowFour(boolean b){
-        if (hand.contains(playPile.getFirst())){
+        if (hand.contains(playPile.getFirst()) || hand.contains(new Card(TYPE.SIX,playPile.getFirst().getColor()))){
             System.out.println("OUCH"+getName());
             try {
                 view.fourThrowIn();
