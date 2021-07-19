@@ -10,7 +10,7 @@ public enum COLOR {
     private  String shortcut;
 
     public static List<COLOR> getExcluded(){
-        return Arrays.stream(COLOR.excluded).toList();
+        return Arrays.asList(COLOR.excluded);
     }
 
     COLOR(String shortcut){

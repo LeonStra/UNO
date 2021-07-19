@@ -17,7 +17,7 @@ public class Server{
     private final String serverLocation = "//localhost/player/";
     private final int connPort = 259;
 
-    private boolean extended = true;
+    private boolean extended = false;
     private boolean pending = true;
     private ServerSocket serversocket;
     private ArrayList<Socket> sockets;

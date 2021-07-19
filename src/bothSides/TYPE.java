@@ -12,9 +12,8 @@ public enum TYPE {
     private int value;
 
     public static List<TYPE> getExcluded(){
-        return Arrays.stream(TYPE.excluded).toList();
-    }//asList??
-    public static  List<TYPE> getMultiColored(){return Arrays.stream(TYPE.multicolored).toList();}
+        return Arrays.asList(TYPE.excluded);}
+    public static  List<TYPE> getMultiColored(){return Arrays.asList(TYPE.multicolored);}
     TYPE(String shortcut, int value){
         this.shortcut = shortcut;
         this.value = value;
