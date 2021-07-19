@@ -16,9 +16,12 @@ import java.rmi.NotBoundException;
 public class Client {
     public final Dimension frameDimension = new Dimension(1200,800);
 
+    public Client(){
+        createStartFrame();
+    }
+
     public static void main(String[] args){
         Client client = new Client();
-        client.createStartFrame();
     }
 
     public void createStartFrame(){
@@ -51,7 +54,7 @@ public class Client {
         PlaceholderInput ipInput = new PlaceholderInput("127.0.0.1",width,inputFont);
         JLabel colon = new JLabel(":");
         colon.setFont(inputFont);
-        PlaceholderInput portInput = new PlaceholderInput("6969",width,inputFont);
+        PlaceholderInput portInput = new PlaceholderInput("259",width,inputFont);
 
         //Name
         PlaceholderInput nameInput = new PlaceholderInput("Name",width,inputFont);

@@ -8,8 +8,6 @@ public class Card implements Serializable, Comparable<Card> {
     private TYPE cType;
     private COLOR color;
 
-    protected Card(){}
-
     public Card(TYPE t, COLOR c){
         this.cType = t;
         this.color = c;

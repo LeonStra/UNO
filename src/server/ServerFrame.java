@@ -46,7 +46,7 @@ public class ServerFrame extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 try {
                     dispose();
-                    server.start();
+                    server.startGame();
                 } catch (IOException | TurnException ioException) {
                     ioException.printStackTrace();
                 }

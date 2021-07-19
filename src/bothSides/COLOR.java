@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public enum COLOR {
-    UNKNOWN("back"),YELLOW("y"),BLUE("b"),RED("r"),GREEN("g"), MULTICOLORED("");
+    UNKNOWN("back"),YELLOW("y"),RED("r"),GREEN("g"),BLUE("b"),MULTICOLORED("");
 
     private static final COLOR[] excluded = {UNKNOWN,MULTICOLORED};
     private  String shortcut;

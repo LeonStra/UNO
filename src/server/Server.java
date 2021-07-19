@@ -15,7 +15,7 @@ import java.util.*;
 
 public class Server{
     private final String serverLocation = "//localhost/player/";
-    private final int connPort = 6969;
+    private final int connPort = 259;
 
     private boolean extended = true;
     private boolean pending = true;
@@ -106,7 +106,7 @@ public class Server{
         }
     }
 
-    public void start() throws IOException, TurnException {
+    public void startGame() throws IOException, TurnException {
         pending = false;
         serversocket.close();
         Collections.shuffle(players);
