@@ -34,7 +34,7 @@ public class ServerHeadless{
     private ArrayList<ExtPlayerImpl> buzzedList;
     private HashMap<ExtPlayerImpl,Integer> fourMap;
 
-    public static void main(String[] args) throws IOException{
+    public static void main(String[] args) throws IOException, TurnException {
         new ServerHeadless();
     }
 
@@ -73,10 +73,19 @@ public class ServerHeadless{
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            if (players.size() >= 1){
+                try {
+                    startGame();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (TurnException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 
-    public ServerHeadless() throws IOException {
+    public ServerHeadless() throws IOException, TurnException {
         this.sockets = new ArrayList<>();
         this.idList = new ArrayList<>();
         this.drawPile = new Pile();
