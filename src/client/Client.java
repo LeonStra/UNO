@@ -1,6 +1,7 @@
 package client;
 
 import bothSides.Player;
+import server.Server;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -14,7 +15,7 @@ import java.rmi.Naming;
 import java.rmi.NotBoundException;
 
 public class Client {
-    public final Dimension frameDimension = new Dimension(1200,800);
+    private final Dimension frameDimension = new Dimension(1200,800);
 
     public Client(){
         createStartFrame();
@@ -65,6 +66,11 @@ public class Client {
         submit.addActionListener(e -> {
             startFrame.dispose();
             setConn(ipInput.getText(),Integer.parseInt(portInput.getText()),nameInput.getText());
+        });
+        JButton server = new JButton("Host");
+        server.setPreferredSize(new Dimension(100,30));
+        server.addActionListener(e -> {
+
         });
 
         JLabel ipLabel = new JLabel("Verbindung:",JLabel.CENTER);

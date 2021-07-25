@@ -88,6 +88,7 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
         increased = false;
         myTurn = false;
         saidUno = false;
+        alreadyPlayed = false;
         view.changeDrawPass(true);
         if (hand.size() == 0) {
             leaveGame();
@@ -164,7 +165,7 @@ public class PlayerImpl extends UnicastRemoteObject implements Player {
                 next();
             }
             refreshView();
-        } else {if (!myTurn){throw new TurnException();}throw new NotSuitableException();}
+        } else {if (!myTurn){throw new TurnException();}else {throw new NotSuitableException();}}
     }
 
     //Kommunikation mit view
