@@ -15,7 +15,7 @@ import java.util.*;
 
 public class ServerHeadless{
     private final String serverLocation = "//localhost/player/";
-    private final int connPort = 259;
+    private final int connPort = 8443;
 
     private boolean extended = false;
     private boolean pending = true;
@@ -102,6 +102,7 @@ public class ServerHeadless{
 
     public void startSockets(boolean extended) throws IOException {
         this.extended = extended;
+        System.out.println(connPort);
         serversocket = new ServerSocket(connPort);
         java.rmi.registry.LocateRegistry.createRegistry(1099);
         while (pending){
