@@ -1,6 +1,7 @@
 package client;
 
 import bothSides.Player;
+import server.PlayerImpl;
 import server.Server;
 
 import javax.swing.*;
@@ -13,6 +14,7 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
+import java.rmi.Remote;
 
 public class Client {
     private final Dimension frameDimension = new Dimension(1200,800);
@@ -101,7 +103,10 @@ public class Client {
             String id = fromServer.readLine();
             socket.close();
             System.out.println("rmi://"+ip+"/player/"+id);
-            new Playground((Player) Naming.lookup("rmi://"+ip+"/player/"+id),name);
+            Remote r = Naming.lookup("rmi://"+ip+"/player/"+id);
+            Player p = (Player)r;
+            System.out.println(p.getTop());
+            //new Playground(p ,name);
         } catch (IOException | NotBoundException e) {
             e.printStackTrace();
         }

@@ -7,6 +7,6 @@ import java.rmi.RemoteException;
 public class ClientTest {
     public static void main(String[] args) throws MalformedURLException, NotBoundException, RemoteException {
         Remote t = Naming.lookup("rmi://"+"127.0.0.1"+"/player/"+"80664");
-        System.out.println(t);
+        System.out.println(((Interface)t).getString());
     }
 }
